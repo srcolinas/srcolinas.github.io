@@ -342,7 +342,7 @@ For the final step, we want to read from standard input if no file is specified,
 1. Parse the file argument with `parser.add_argument("file", nargs="?", type=argparse.FileType("r"), default=sys.stdin)`.
 2. Modify `count` so that it takes as `typing.TextIO` instead of `str`.
 
-You can see the final solution in `https://github.com/srcolinas/coding-challenges-solutions-python`.
+You can see the final solution in `https://github.com/srcolinas/coding-challenges-solutions-python`. Please notice that we may not have covered all of the edge cases in the tests, we would just add some once discovered. Feel free to point it out in the repo
 
 ## Food for Thought
 
