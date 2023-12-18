@@ -3,6 +3,7 @@ layout: post
 title: "Coding Challenges Solutions: introduction"
 categories: guides
 tags: [Coding Challenges, TDD]
+banner: "/assets/images/explaining.jpg"
 ---
 
 If you have developed any piece of working code within a team, you may have noticed that several different people often come up with very different solutions for building the same thing. Both of them could work equally well in terms of the functional requiremens of the application, but I believe there is much more to software than that. While looking at different soluitons, you may notice that some solutions may use more lines of code than others; some will optimize the use of dependencies; there will be one that feels like the more straight forward solution; etc. Perhaps you have found yourself in an argument (with a colleague or with yourself) tying to figure out what would be the best way to implement some requirement. I strongly believe that **the best we can hope for is for code to be written so that it allows developers to iterate quickly**, so that they can test, debug, provide bug fixes and release new features quickly, easily and safely.

@@ -2,10 +2,11 @@
 layout: post
 title: "Coding Challenges Solutions: Word Count"
 categories: Tutorials
-tags: [Coding Challenges]
+tags: [Coding Challenges, TDD]
+banner: "/assets/images/counting-words.jpg"
 ---
 
-Here I share how I solved the first of the coding challenges from [Coding Challenges](https://codingchallenges.fyi): [Write Your Own wc Tool](https://codingchallenges.fyi/challenges/challenge-wc).
+Here I share how I solved the first of the coding challenges from [Coding Challenges](https://codingchallenges.fyi), please read it yourself first: https://codingchallenges.fyi/challenges/challenge-wc.
 
 
 ## Step Zero
@@ -21,7 +22,7 @@ The challenge gives us a lot of freedom in how we do things: language used, buil
     └── pyproject.toml
 ```
 
-I decided to call it `pyccwc` because is the `wc` tool written in Python and following Coding Challenges guide, but the name is not really the most important thing in my opinion. Now that you have created the project, add some simple development dependencies, that will help you quickly diagnose the quality of your code, `cd` into the top level `pyccwc` directory and do `poetry add --group dev mypy ruff pytest`. Before commiting code changes, I usually do `poetry run ruff --fix .`, `poetry run ruff format .`, `poetry run mypy .` and `poetry run pytest tests/unit`.
+I decided to call it `pyccwc` because it is the `wc` tool written in Python and following the Coding Challenges guide, but the name is not really the most important thing in my opinion. Now that you have created the project, add some simple development dependencies, that will help you quickly diagnose the quality of your code, `cd` into the top level `pyccwc` directory and do `poetry add --group dev mypy ruff pytest`. Before commiting code changes, I usually do `poetry run ruff --fix .`, `poetry run ruff format .`, `poetry run mypy .` and `poetry run pytest tests/unit`.
 
 Finally, add the following to `pyproject.toml`
 
@@ -76,11 +77,7 @@ If you look beyond the boilerplate, you could say we need a function that takes 
 from pathlib import Path
 
 def process_file(file: Path, *, count_lines: bool) -> str:
-    result = ""
-    if count_lines:
-        num_lines = len(file.read_text().splitlines())
-        result = f"{num_lines} {file}"
-    return result
+    ...
 ```
 
 Automatic tests for this are easier to build, here is one possitiblity (goes into `pyccwc/tests/unit/test_main.py`):
@@ -102,7 +99,7 @@ So far it looks simple simple enough, but think about this:
 2. When we add more functionality to the solution, you will need to remember also how many bytes, words and characters the file has.
 3. We most certainly need to cover some edge cases from time to time, so we would have to add more files thus we would need to remember the expected responses for all of those files.
 
-My current approach to build software, doesn't only requires me to write tests, it also requires me to write them in a way that is simple to maintain, so let's see how we can remove the maintainability issues I just mentioned:
+My current approach to build software doesn't only requires me to write tests, it also requires me to write them in a way that is simple to maintain, so let's see how we can remove the maintainability issues I just mentioned:
 
 
 ```python
@@ -188,7 +185,7 @@ def test_formating():
     assert format(Path("name.txt"), 3) == "3 name.txt"
 ```
 
-We can very quickly now:
+We work more productively now:
 * We don't need to keep track of some files for testing.
 * Our tests run as fast as they can, even if we don't have multiple cores.
 * We can test different aspects of our code independently. 
@@ -334,7 +331,7 @@ if __name__ == "__main__":
 
 ## Steps Three, Four, Five and Final Step
 
-Adding command line options `-w` (count words) and `-m` (count characters), is very similar to the previous step: write the tests for the `pyccwc.main.count` and `pyccwc.main.format` functions and then make the necessary changes to them so that tests pass. Therefore, I won walk you through it. You will later find that we didn't really need to change `pyccwc.main.format` to work with the new tests, it just worked out of the box because `Counts` is a `NamedTuple`. Adding the default option (step five) is just another conditional and test that you can add yourself.
+Adding command line options `-w` (count words) and `-m` (count characters), is very similar to the previous step: write the tests for the `pyccwc.main.count` and `pyccwc.main.format` functions and then make the necessary changes to them so that tests pass. Therefore, I won't walk you through it. You will later find that we didn't really need to change `pyccwc.main.format` to work with the new tests, it just worked out of the box because `Counts` is a `NamedTuple`. Adding the default option (step five) is just another conditional and test that you can add yourself.
 
 
 For the final step, we want to read from standard input if no file is specified, so there are a few key changes we want to do here:
@@ -342,7 +339,7 @@ For the final step, we want to read from standard input if no file is specified,
 1. Parse the file argument with `parser.add_argument("file", nargs="?", type=argparse.FileType("r"), default=sys.stdin)`.
 2. Modify `count` so that it takes as `typing.TextIO` instead of `str`.
 
-You can see the final solution in `https://github.com/srcolinas/coding-challenges-solutions-python`. Please notice that we may not have covered all of the edge cases in the tests, we would just add some once discovered. Feel free to point it out in the repo
+You can see the final solution in `https://github.com/srcolinas/coding-challenges-solutions-python`. Please notice that we may not have covered all of the edge cases in the tests, we would just add some once discovered. Feel free to point it out in the repo.
 
 ## Food for Thought
 
