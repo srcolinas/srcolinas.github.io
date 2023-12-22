@@ -11,7 +11,7 @@ Here I share how I solved the first of the coding challenges from [Coding Challe
 
 ## Step Zero
 
-The challenge gives us a lot of freedom in how we do things: language used, build process and editor. I have decided to use [Python](https://www.python.org/) for this tutorial (version `3.11` to be precise), and the [Poetry packaging and dependency manager](https://python-poetry.org/). Please go throgh poetry's documentation and start a new project; something like `poetry new pyccwc`, you should endup with a project structure like
+The challenge gives us a lot of freedom in how we do things: language used, build process and editor. I have decided to use [Python](https://www.python.org/) for this tutorial (version `3.11` to be precise), and the [Poetry packaging and dependency manager](https://python-poetry.org/). Please go through poetry's documentation and start a new project; something like `poetry new pyccwc`, you should endup with a project structure like
 
 ```
 .
@@ -35,7 +35,7 @@ This should allow you to use the tool as `pyccwc {FILE}` from the command line (
 
 ## Step One
 
-*Note: I misread step 1 with step 2 from the original Coding Challenges post, so I implemented orignial step 2 here, please note that it doesn't make much of a difference.*
+*Note: I misread step 1 with step 2 from the original Coding Challenges post, so I implemented original step 2 here, please note that it doesn't make much of a difference.*
 
 We are initially required to write code to output the number of lines of a file. Here is a first attempt (goes into the file `pyccwc/main.py`):
 
@@ -124,7 +124,7 @@ def files_and_results(tmp_path: Path):
     return values
 ```
 
-If you are unfamiliar with the above, please go through `pytest` documentation, read about the `tmp_path` fixture in particular. With this new approach, we do not need to remember anything about the files and we do not need to keep the files around in our codebase, so we are a bit better than before.  
+If you are unfamiliar with the above, please go through [`pytest` documentation](https://docs.pytest.org/en/7.4.x/), read about the [`tmp_path` fixture](https://docs.pytest.org/en/7.1.x/how-to/tmp_path.html) in particular. With this new approach, we do not need to remember anything about the files and we do not need to keep the files around in our codebase, so we are a bit better than before.  
 
 We are not done though. Now I will tell you two more things that I still don't like about this setup for tests:
 1. Writing and reading some files is quite an expensive operation, at least compared to processing data in memory; therefore, running our tests this way can be slow (sure, a few short files may not make a difference and you could run tests in parallel, but there is a simpler and cheaper way).
@@ -155,7 +155,12 @@ def _cli():
     parser.add_argument("-l", "--lines", action="store_true")
 
     args = parser.parse_args()
-    print(format(args.file, count(args.file.read_text(), count_lines=args.lines)))
+    print(
+        format(
+            args.file,
+            count(args.file.read_text(), count_lines=args.lines)
+        )
+    )
 
 
 if __name__ == "__main__":
@@ -344,11 +349,10 @@ You can see the final solution in `https://github.com/srcolinas/coding-challenge
 ## Food for Thought
 
 I wrote the code so that it is easy to debug, change and, very importantly, easy to understand by the reader; however, I didn't write it so that performance of the function calls is optimized as much as possible. In particular, there are a few things to notice:
-1. Our current solution is $O(n \times m \times l)$ (for number of lines, characters and whitespaces) respectively. It could be made so that it is $O(n)$.
-2. We throw a bunch of conditionals inside of the main `for` loop, which could probably be avoided as well.
+1. Our current solution is $O(n \times m \times l)$ (for number of lines, characters and whitespaces) respectively. It could be made so that it is $O(n)$, whit $n$ being the number of characters.
+2. We throw a bunch of conditionals inside of the main `for` loop, which could probably avoided by defining some functions to call depending on the flags given; whether that is faster than the current solution is out of the scope of this post.
 
-
-Finally, the solution doesn't really match the output of `wc` for the number of characters, I just didn't want to spend more time on that. I really hope the intent of this post is clear enough.
+Finally, the solution doesn't really match the output of `wc` for the number of characters, I just didn't want to spend more time on that; if you want to fix it, you can deep dive into locales, following the Coding Challenges guide on step three.
 
 ---
 
