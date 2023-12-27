@@ -1,1 +1,0 @@
-My personal page, built using: https://github.com/jeffreytse/jekyll-theme-yat/tree/master
