@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title></title>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="https://srcolinas.github.io/css/bootstrap.min.css">
+  <!-- Custom fonts for this template -->
+  <link href=" https://srcolinas.github.io/css/all.min.css" rel=" stylesheet" type="text/css">
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet'
+    type='text/css'>
+  <link
+    href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800'
+    rel='stylesheet' type='text/css'>
+
+  <!-- Custom styles for this template -->
+  <link rel="stylesheet" href="https://srcolinas.github.io/clean-blog.css">
+
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand" href="https:&#x2F;&#x2F;srcolinas.github.io"></a>
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
+        data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false"
+        aria-label="Toggle navigation">
+        Menu
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+          
+          <li class="nav-item">
+            <a class="nav-link"
+              href="https:&#x2F;&#x2F;srcolinas.github.io">Home</a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link"
+              href="https:&#x2F;&#x2F;srcolinas.github.io&#x2F;about">About</a>
+          </li>
+          
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  
+<!-- Page Header -->
+<header class="masthead" style="background-image: url('https://srcolinas.github.io/img/post-bg.jpg')">
+  <div class="overlay"></div>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <div class="post-heading">
+          
+<h1>Coding Challenges Solutions: Word Count</h1>
+<span class="meta">Posted by
+    <a href="#">Sebastian</a>
+    on 16 December 2023
+</span>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+  
+<!-- Post Content -->
+<article>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <p>Here I share how I solved the first of the coding challenges from <a href="https://codingchallenges.fyi">Coding Challenges</a>, please read it yourself first: https://codingchallenges.fyi/challenges/challenge-wc.</p>
+<span id="continue-reading"></span><h2 id="step-zero">Step Zero</h2>
+<p>The challenge gives us a lot of freedom in how we do things: language used, build process and editor. I have decided to use <a href="https://www.python.org/">Python</a> for this tutorial (version <code>3.11</code> to be precise), and the <a href="https://python-poetry.org/">Poetry packaging and dependency manager</a>. Please go through poetry's documentation and start a new project; something like <code>poetry new pyccwc</code>, you should endup with a project structure like</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>.
+</span><span>└── pyccwc
+</span><span>    ├── pyccwc
+</span><span>    ├── tests
+</span><span>    ├── README.md
+</span><span>    └── pyproject.toml
+</span></code></pre>
+<p>I decided to call it <code>pyccwc</code> because it is the <code>wc</code> tool written in Python and following the Coding Challenges guide, but the name is not really the most important thing in my opinion. Now that you have created the project, add some simple development dependencies, that will help you quickly diagnose the quality of your code, <code>cd</code> into the top level <code>pyccwc</code> directory and do <code>poetry add --group dev mypy ruff pytest</code>. Before commiting code changes, I usually do <code>poetry run ruff --fix .</code>, <code>poetry run ruff format .</code>, <code>poetry run mypy .</code> and <code>poetry run pytest tests/unit</code>.</p>
+<p>Finally, add the following to <code>pyproject.toml</code></p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[tool.poetry.scripts]
+</span><span style="color:#bf616a;">pyccwc </span><span>= &quot;</span><span style="color:#a3be8c;">pyccwc.main:_cli</span><span>&quot;
+</span></code></pre>
+<p>This should allow you to use the tool as <code>pyccwc {FILE}</code> from the command line (after we implement a <code>_cli</code> function in a <code>pyccwc/main.py</code> module).</p>
+<h2 id="step-one">Step One</h2>
+<p><em>Note: I misread step 1 with step 2 from the original Coding Challenges post, so I implemented original step 2 here, please note that it doesn't make much of a difference.</em></p>
+<p>We are initially required to write code to output the number of lines of a file. Here is a first attempt (goes into the file <code>pyccwc/main.py</code>):</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pathlib </span><span style="color:#b48ead;">import </span><span>Path
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">_cli</span><span>():
+</span><span>    </span><span style="color:#b48ead;">import </span><span>argparse
+</span><span>
+</span><span>    parser = argparse.</span><span style="color:#bf616a;">ArgumentParser</span><span>()
+</span><span>    parser.</span><span style="color:#bf616a;">add_argument</span><span>(&quot;</span><span style="color:#a3be8c;">file</span><span>&quot;, </span><span style="color:#bf616a;">type</span><span>=Path)
+</span><span>    parser.</span><span style="color:#bf616a;">add_argument</span><span>(&quot;</span><span style="color:#a3be8c;">-l</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">--lines</span><span>&quot;, </span><span style="color:#bf616a;">action</span><span>=&quot;</span><span style="color:#a3be8c;">store_true</span><span>&quot;)
+</span><span>
+</span><span>    args = parser.</span><span style="color:#bf616a;">parse_args</span><span>()
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>args.lines:
+</span><span>        num_lines = </span><span style="color:#96b5b4;">len</span><span>(args.file.</span><span style="color:#bf616a;">read_text</span><span>().</span><span style="color:#bf616a;">splitlines</span><span>())
+</span><span>        </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;{num_lines} {args.file}&quot;)
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>__name__ == &quot;</span><span style="color:#a3be8c;">__main__</span><span>&quot;:
+</span><span>    </span><span style="color:#bf616a;">_cli</span><span>()
+</span></code></pre>
+<p>What you can see from <code>def _cli</code> to the end of the file is mostly boilerplate: besides parsing user input in the standard Python way, the code that doesn't contain a lot of meaningful logic to solve our problem. Please go through the <a href="https://docs.python.org/3/library/argparse.html"><code>argparse</code> module documentation</a> if you are feeling lost so far.</p>
+<p>The logic is implemented after the <code>if</code> statement. The code works, do the following to see it working for yourself:</p>
+<ol>
+<li>Install your application in the current environment: <code>poetry install</code></li>
+<li>Start a shell that can execute your application: <code>poetry shell</code></li>
+<li>Execute the application: <code>pyccwc -c test.txt</code></li>
+</ol>
+<p>Note that <code>test.txt</code> is referenced in the original Coding Challenges link. Step 3 wil print <code>7145 test.txt</code> to the console, which is what we want. However, we do not want to test things manually. We want a quicker and more reliable approach to test this.</p>
+<p>What would we need to write an automated test for this? You would need to have an environment in which you have installed <code>pyccwc</code>, then automate the process of calling a shell command and capture <code>STDOUT</code> to see whether it matches the expected message. You would also have to write and store several files around that will have the necessary contents so that you know your application works well, regardless of the contents of the file (for example, in this case we need to remember that <code>test.txt</code> contained exactly 7145 lines). I challenge you to try to do it yourself, I bet it will take you some time to have the setup right. There is something more we can do about it though: let's use TDD to design our solution, so that we automatically end up with something that is easier to test.</p>
+<p>If you look beyond the boilerplate, you could say we need a function that takes in a file and produces a string. The fact that we take user input in certain form (command line arguments) and produce user output in another (print values to the terminal) has nothing to do with the logic of our application, but more with how our application is deployed (a command line application in this case). If we are to follow TDD we could say we need a function called <code>process_file</code> that takes in a <code>Path</code> to a file with certain contents and so far is required to produce a <code>str</code> with the number of lines if a flag is provided, something like:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pathlib </span><span style="color:#b48ead;">import </span><span>Path
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">process_file</span><span>(</span><span style="color:#bf616a;">file</span><span>: Path, *, </span><span style="color:#bf616a;">count_lines</span><span>: bool) -&gt; str:
+</span><span>    </span><span style="color:#d08770;">...
+</span></code></pre>
+<p>Automatic tests for this are easier to build, here is one possitiblity (goes into <code>pyccwc/tests/unit/test_main.py</code>):</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pathlib </span><span style="color:#b48ead;">import </span><span>Path
+</span><span>
+</span><span style="color:#b48ead;">from </span><span>pyccwc.main </span><span style="color:#b48ead;">import </span><span>process_file
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">test_number_of_lines_is_correct</span><span>():
+</span><span>    file = </span><span style="color:#bf616a;">Path</span><span>(&quot;</span><span style="color:#a3be8c;">test.txt</span><span>&quot;)
+</span><span>    </span><span style="color:#b48ead;">assert </span><span style="color:#bf616a;">process_file</span><span>(file, </span><span style="color:#bf616a;">count_lines</span><span>=</span><span style="color:#d08770;">True</span><span>) == &quot;</span><span style="color:#a3be8c;">7145 test.txt</span><span>&quot;
+</span><span>
+</span></code></pre>
+<p>So far it looks simple simple enough, but think about this:</p>
+<ol>
+<li>You need to remember the number of lines that <code>test.txt</code> has.</li>
+<li>When we add more functionality to the solution, you will need to remember also how many bytes, words and characters the file has.</li>
+<li>We most certainly need to cover some edge cases from time to time, so we would have to add more files thus we would need to remember the expected responses for all of those files.</li>
+</ol>
+<p>My current approach to build software doesn't only requires me to write tests, it also requires me to write them in a way that is simple to maintain, so let's see how we can remove the maintainability issues I just mentioned:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pathlib </span><span style="color:#b48ead;">import </span><span>Path
+</span><span>
+</span><span style="color:#b48ead;">import </span><span>pytest
+</span><span>
+</span><span style="color:#b48ead;">from </span><span>pyccwc.main </span><span style="color:#b48ead;">import </span><span>process_file
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">test_number_of_lines_is_correct</span><span>(</span><span style="color:#bf616a;">files_and_results</span><span>: tuple[Path, str]):
+</span><span>    </span><span style="color:#b48ead;">for </span><span>file, result </span><span style="color:#b48ead;">in </span><span>files_and_results:
+</span><span>        </span><span style="color:#b48ead;">assert </span><span style="color:#bf616a;">process_file</span><span>(file, </span><span style="color:#bf616a;">count_lines</span><span>=</span><span style="color:#d08770;">True</span><span>) == result
+</span><span>
+</span><span>
+</span><span>@pytest.</span><span style="color:#bf616a;">fixture
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">files_and_results</span><span>(</span><span style="color:#bf616a;">tmp_path</span><span>: Path):
+</span><span>    values = []
+</span><span>
+</span><span>    file = tmp_path / &quot;</span><span style="color:#a3be8c;">test1.txt</span><span>&quot;
+</span><span>    file.</span><span style="color:#bf616a;">write_text</span><span>(&quot;</span><span style="color:#a3be8c;">A </span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;"> piece </span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;"> of text.</span><span>&quot;)
+</span><span>    values.</span><span style="color:#bf616a;">append</span><span>((file, </span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">3 </span><span>{file}&quot;))
+</span><span>    </span><span style="color:#b48ead;">return </span><span>values
+</span></code></pre>
+<p>If you are unfamiliar with the above, please go through <a href="https://docs.pytest.org/en/7.4.x/"><code>pytest</code> documentation</a>, read about the <a href="https://docs.pytest.org/en/7.1.x/how-to/tmp_path.html"><code>tmp_path</code> fixture</a> in particular. With this new approach, we do not need to remember anything about the files and we do not need to keep the files around in our codebase, so we are a bit better than before.</p>
+<p>We are not done though. Now I will tell you two more things that I still don't like about this setup for tests:</p>
+<ol>
+<li>Writing and reading some files is quite an expensive operation, at least compared to processing data in memory; therefore, running our tests this way can be slow (sure, a few short files may not make a difference and you could run tests in parallel, but there is a simpler and cheaper way).</li>
+<li>We are actually doing two things inside <code>process_file</code>: computing the number of lines and then formating the result (for simple applicationgs it may not be too bad, but we are hoping to build a more scalable habit). </li>
+</ol>
+<p>Here is another version of <code>pyccwc/main.py</code>:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pathlib </span><span style="color:#b48ead;">import </span><span>Path
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">count</span><span>(</span><span style="color:#bf616a;">content</span><span>: str, *, </span><span style="color:#bf616a;">count_lines</span><span>: bool) -&gt; int:
+</span><span>    result = -</span><span style="color:#d08770;">1
+</span><span>    </span><span style="color:#b48ead;">if </span><span>count_lines:
+</span><span>        result = </span><span style="color:#96b5b4;">len</span><span>(content.</span><span style="color:#bf616a;">splitlines</span><span>())
+</span><span>    </span><span style="color:#b48ead;">return </span><span>result
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">format</span><span>(</span><span style="color:#bf616a;">file</span><span>: Path, </span><span style="color:#bf616a;">count</span><span>: int) -&gt; str:
+</span><span>    </span><span style="color:#b48ead;">return f</span><span>&quot;{count} {file}&quot;
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">_cli</span><span>():
+</span><span>    </span><span style="color:#b48ead;">import </span><span>argparse
+</span><span>
+</span><span>    parser = argparse.</span><span style="color:#bf616a;">ArgumentParser</span><span>()
+</span><span>    parser.</span><span style="color:#bf616a;">add_argument</span><span>(&quot;</span><span style="color:#a3be8c;">file</span><span>&quot;, </span><span style="color:#bf616a;">type</span><span>=Path)
+</span><span>    parser.</span><span style="color:#bf616a;">add_argument</span><span>(&quot;</span><span style="color:#a3be8c;">-l</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">--lines</span><span>&quot;, </span><span style="color:#bf616a;">action</span><span>=&quot;</span><span style="color:#a3be8c;">store_true</span><span>&quot;)
+</span><span>
+</span><span>    args = parser.</span><span style="color:#bf616a;">parse_args</span><span>()
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(
+</span><span>        </span><span style="color:#96b5b4;">format</span><span>(
+</span><span>            args.file,
+</span><span>            </span><span style="color:#bf616a;">count</span><span>(args.file.</span><span style="color:#bf616a;">read_text</span><span>(), </span><span style="color:#bf616a;">count_lines</span><span>=args.lines)
+</span><span>        )
+</span><span>    )
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>__name__ == &quot;</span><span style="color:#a3be8c;">__main__</span><span>&quot;:
+</span><span>    </span><span style="color:#bf616a;">_cli</span><span>()
+</span><span>
+</span></code></pre>
+<p>with <code>tests/unit/test_main.py</code> being:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>pathlib </span><span style="color:#b48ead;">import </span><span>Path
+</span><span>
+</span><span style="color:#b48ead;">import </span><span>pytest
+</span><span>
+</span><span style="color:#b48ead;">from </span><span>pyccwc.main </span><span style="color:#b48ead;">import </span><span>count, </span><span style="color:#96b5b4;">format
+</span><span>
+</span><span>
+</span><span>@pytest.mark.</span><span style="color:#bf616a;">parametrize</span><span>(
+</span><span>    &quot;</span><span style="color:#a3be8c;">content,num_lines</span><span>&quot;,
+</span><span>    [(&quot;</span><span style="color:#a3be8c;">A </span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;"> piece </span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;"> of text.</span><span>&quot;, </span><span style="color:#d08770;">3</span><span>), (&quot;</span><span style="color:#a3be8c;">another piece </span><span style="color:#96b5b4;">\n</span><span>&quot;, </span><span style="color:#d08770;">1</span><span>), (&quot;&quot;, </span><span style="color:#d08770;">0</span><span>)],
+</span><span>)
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">test_number_of_lines</span><span>(</span><span style="color:#bf616a;">content</span><span>, </span><span style="color:#bf616a;">num_lines</span><span>):
+</span><span>    </span><span style="color:#b48ead;">assert </span><span style="color:#bf616a;">count</span><span>(content, </span><span style="color:#bf616a;">count_lines</span><span>=</span><span style="color:#d08770;">True</span><span>) == num_lines
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">test_formating</span><span>():
+</span><span>    </span><span style="color:#b48ead;">assert </span><span style="color:#96b5b4;">format</span><span>(</span><span style="color:#bf616a;">Path</span><span>(&quot;</span><span style="color:#a3be8c;">name.txt</span><span>&quot;), </span><span style="color:#d08770;">3</span><span>) == &quot;</span><span style="color:#a3be8c;">3 name.txt</span><span>&quot;
+</span></code></pre>
+<p>We work more productively now:</p>
+<ul>
+<li>We don't need to keep track of some files for testing.</li>
+<li>Our tests run as fast as they can, even if we don't have multiple cores.</li>
+<li>We can test different aspects of our code independently. </li>
+</ul>
+<p>By the way, look into <code>pytest.mark.parametrize</code>, it is a nice way to define multiple test when just the input and output is changing. We are ready to go to the next step.</p>
+<h2 id="step-two">Step Two</h2>
+<p><em>Note: I misread step 1 with step 2 from the original Coding Challenges post, so I implemented orignial step 1 here, please note that it doesn't make much of a difference.</em></p>
+<p>In this step we will add suport to count the number of bytes in a file. We want to make sure we count bytes and not characters, as there are characters that can use more than one byte. Here is how a test could look like (add to <code>pyccwc/tests/unit/test_main.py</code>):</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>@pytest.mark.</span><span style="color:#bf616a;">parametrize</span><span>(
+</span><span>    &quot;</span><span style="color:#a3be8c;">content,num_bytes</span><span>&quot;,
+</span><span>    [(&quot;</span><span style="color:#a3be8c;">aa</span><span style="color:#96b5b4;">\x01\x02</span><span style="color:#a3be8c;">b桜</span><span>&quot;, </span><span style="color:#d08770;">3</span><span>), (&quot;&quot;, </span><span style="color:#d08770;">0</span><span>)],
+</span><span>)
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">test_number_of_bytes</span><span>(</span><span style="color:#bf616a;">content</span><span>, </span><span style="color:#bf616a;">num_bytes</span><span>):
+</span><span>    </span><span style="color:#b48ead;">assert </span><span style="color:#bf616a;">count</span><span>(content, </span><span style="color:#bf616a;">count_bytes</span><span>=</span><span style="color:#d08770;">True</span><span>) == num_bytes
+</span></code></pre>
+<p>We could figure out a way to combine it with the <code>test_number_of_lines</code> we wrote previously, but I prefer to have the test isolated because it would let me focus on the different options one by one and allow me to fit the code more nicely in the post. We haven't wrote the functionality yet, so running <code>pytest</code> will lead to 2 errors. We need to change <code>pyccwc.main.count</code> so that:</p>
+<ol>
+<li>It accepts the <code>count_bytes</code> parameter.</li>
+<li>It returns one or possibly two integers instead of one.</li>
+</ol>
+<p>Here is a minimal change to the interface of <code>pyccwc.main.count</code> that can support what we want:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">class </span><span style="color:#ebcb8b;">Counts</span><span style="color:#eff1f5;">(</span><span style="color:#a3be8c;">NamedTuple</span><span style="color:#eff1f5;">):
+</span><span>    bytes: int
+</span><span>    lines: int
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">count</span><span>(
+</span><span>    </span><span style="color:#bf616a;">content</span><span>: str, *, </span><span style="color:#bf616a;">count_lines</span><span>: bool = </span><span style="color:#d08770;">False</span><span>, </span><span style="color:#bf616a;">count_bytes</span><span>: bool = </span><span style="color:#d08770;">False
+</span><span>) -&gt; Counts:
+</span><span>    num_lines = -</span><span style="color:#d08770;">1
+</span><span>    num_bytes = -</span><span style="color:#d08770;">1
+</span><span>    </span><span style="color:#b48ead;">if </span><span>count_lines:
+</span><span>        num_lines = </span><span style="color:#96b5b4;">len</span><span>(content.</span><span style="color:#bf616a;">splitlines</span><span>())
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">Counts</span><span>(num_lines, num_bytes)
+</span></code></pre>
+<p>Note that we now return an object that contains both the number of lines and the number of bytes (I have arbitraryly chosen <code>-1</code> to represent the fact that different counts are optional), so tests have to be changed so that they check for this tuple instead of a single number. </p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>@pytest.mark.</span><span style="color:#bf616a;">parametrize</span><span>(
+</span><span>    &quot;</span><span style="color:#a3be8c;">content,num_lines</span><span>&quot;,
+</span><span>    [(&quot;</span><span style="color:#a3be8c;">A </span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;"> piece </span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;"> of text.</span><span>&quot;, </span><span style="color:#d08770;">3</span><span>), (&quot;</span><span style="color:#a3be8c;">another piece </span><span style="color:#96b5b4;">\n</span><span>&quot;, </span><span style="color:#d08770;">1</span><span>), (&quot;&quot;, </span><span style="color:#d08770;">0</span><span>)],
+</span><span>)
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">test_number_of_lines</span><span>(</span><span style="color:#bf616a;">content</span><span>, </span><span style="color:#bf616a;">num_lines</span><span>):
+</span><span>    </span><span style="color:#b48ead;">assert </span><span style="color:#bf616a;">count</span><span>(content, </span><span style="color:#bf616a;">count_lines</span><span>=</span><span style="color:#d08770;">True</span><span>) == (num_lines, -</span><span style="color:#d08770;">1</span><span>)
+</span><span>
+</span><span>@pytest.mark.</span><span style="color:#bf616a;">parametrize</span><span>(
+</span><span>    &quot;</span><span style="color:#a3be8c;">content,num_bytes</span><span>&quot;,
+</span><span>    [(&quot;</span><span style="color:#a3be8c;">aa</span><span style="color:#96b5b4;">\x01\x02</span><span style="color:#a3be8c;">b桜</span><span>&quot;, </span><span style="color:#d08770;">8</span><span>), (&quot;&quot;, </span><span style="color:#d08770;">0</span><span>)],
+</span><span>)
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">test_number_of_bytes</span><span>(</span><span style="color:#bf616a;">content</span><span>, </span><span style="color:#bf616a;">num_bytes</span><span>):
+</span><span>    </span><span style="color:#b48ead;">assert </span><span style="color:#bf616a;">count</span><span>(content, </span><span style="color:#bf616a;">count_bytes</span><span>=</span><span style="color:#d08770;">True</span><span>) == (-</span><span style="color:#d08770;">1</span><span>, num_bytes)
+</span></code></pre>
+<p>Moreover, we also need to account for the fact that <code>count_bytes</code> and <code>count_lines</code> can be both <code>True</code>, so we need a test case for that</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#65737e;">## Note that we do not need to be very exhaustive with
+</span><span style="color:#65737e;">## the following test, edge cases are to be covered in the
+</span><span style="color:#65737e;">## previous ones.
+</span><span>@pytest.mark.</span><span style="color:#bf616a;">parametrize</span><span>(
+</span><span>    &quot;</span><span style="color:#a3be8c;">content,result</span><span>&quot;,
+</span><span>    [(&quot;</span><span style="color:#a3be8c;">Dear programmer</span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;"> please write tests</span><span>&quot;, (</span><span style="color:#d08770;">2</span><span>, </span><span style="color:#d08770;">34</span><span>)), (&quot;&quot;, (</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>))],
+</span><span>)
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">test_combined_calls</span><span>(</span><span style="color:#bf616a;">content</span><span>, </span><span style="color:#bf616a;">result</span><span>):
+</span><span>    </span><span style="color:#b48ead;">assert </span><span style="color:#bf616a;">count</span><span>(content, </span><span style="color:#bf616a;">count_lines</span><span>=</span><span style="color:#d08770;">True</span><span>, </span><span style="color:#bf616a;">count_bytes</span><span>=</span><span style="color:#d08770;">True</span><span>) == result
+</span></code></pre>
+<p>Similarly, our formating function and its test need to adapt to this new interface:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>@pytest.mark.</span><span style="color:#bf616a;">parametrize</span><span>(
+</span><span>    &quot;</span><span style="color:#a3be8c;">counts,result_numbers</span><span>&quot;, [
+</span><span>        (</span><span style="color:#bf616a;">Counts</span><span>(-</span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">3</span><span>), &quot;</span><span style="color:#a3be8c;">3</span><span>&quot;),
+</span><span>        (</span><span style="color:#bf616a;">Counts</span><span>(</span><span style="color:#d08770;">5</span><span>, -</span><span style="color:#d08770;">1</span><span>), &quot;</span><span style="color:#a3be8c;">5</span><span>&quot;),
+</span><span>        (</span><span style="color:#bf616a;">Counts</span><span>(</span><span style="color:#d08770;">4</span><span>, </span><span style="color:#d08770;">2</span><span>), &quot;</span><span style="color:#a3be8c;">4 2</span><span>&quot;),
+</span><span>    ]
+</span><span>)
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">test_formating</span><span>(</span><span style="color:#bf616a;">counts</span><span>, </span><span style="color:#bf616a;">result_numbers</span><span>):
+</span><span>    </span><span style="color:#b48ead;">assert </span><span style="color:#96b5b4;">format</span><span>(</span><span style="color:#bf616a;">Path</span><span>(&quot;</span><span style="color:#a3be8c;">name.txt</span><span>&quot;), counts) == </span><span style="color:#b48ead;">f</span><span>&quot;{result_numbers}</span><span style="color:#a3be8c;"> name.txt</span><span>&quot;
+</span></code></pre>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">format</span><span>(</span><span style="color:#bf616a;">file</span><span>: Path, </span><span style="color:#bf616a;">counts</span><span>: Counts) -&gt; str:
+</span><span>    result = &quot;&quot;
+</span><span>    </span><span style="color:#b48ead;">for </span><span>c </span><span style="color:#b48ead;">in </span><span>counts:
+</span><span>        </span><span style="color:#b48ead;">if </span><span>c != -</span><span style="color:#d08770;">1</span><span>:
+</span><span>            result += </span><span style="color:#b48ead;">f</span><span>&quot;{c} &quot;
+</span><span>    result += </span><span style="color:#b48ead;">f</span><span>&quot;{file}&quot;
+</span><span>    </span><span style="color:#b48ead;">return </span><span>result
+</span></code></pre>
+<p>After all these changes we are still failing to compute the number of bytes correctly, which can be easily fixed like this:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">count</span><span>(
+</span><span>    </span><span style="color:#bf616a;">content</span><span>: str, *, </span><span style="color:#bf616a;">count_lines</span><span>: bool = </span><span style="color:#d08770;">False</span><span>, </span><span style="color:#bf616a;">count_bytes</span><span>: bool = </span><span style="color:#d08770;">False
+</span><span>) -&gt; Counts:
+</span><span>    num_bytes = </span><span style="color:#d08770;">0 </span><span style="color:#b48ead;">if </span><span>count_bytes </span><span style="color:#b48ead;">else </span><span>-</span><span style="color:#d08770;">1
+</span><span>    i = -</span><span style="color:#d08770;">1
+</span><span>    </span><span style="color:#b48ead;">for </span><span>i, line </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">enumerate</span><span>(content.</span><span style="color:#bf616a;">splitlines</span><span>()):
+</span><span>        </span><span style="color:#b48ead;">if </span><span>count_bytes:
+</span><span>            num_bytes += </span><span style="color:#96b5b4;">len</span><span>(line.</span><span style="color:#bf616a;">encode</span><span>())
+</span><span>    
+</span><span>    num_lines = -</span><span style="color:#d08770;">1 </span><span style="color:#b48ead;">if </span><span>not count_lines </span><span style="color:#b48ead;">else </span><span>i + </span><span style="color:#d08770;">1
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">Counts</span><span>(num_lines, num_bytes)
+</span></code></pre>
+<p>with this new additions, we just need to change our boilerplate (<code>pyccwc.main._cli</code>) so that it calls the nicely typed and tested functions properly:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">_cli</span><span>():
+</span><span>    </span><span style="color:#b48ead;">import </span><span>argparse
+</span><span>
+</span><span>    parser = argparse.</span><span style="color:#bf616a;">ArgumentParser</span><span>()
+</span><span>    parser.</span><span style="color:#bf616a;">add_argument</span><span>(&quot;</span><span style="color:#a3be8c;">file</span><span>&quot;, </span><span style="color:#bf616a;">type</span><span>=Path)
+</span><span>    parser.</span><span style="color:#bf616a;">add_argument</span><span>(&quot;</span><span style="color:#a3be8c;">-l</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">--lines</span><span>&quot;, </span><span style="color:#bf616a;">action</span><span>=&quot;</span><span style="color:#a3be8c;">store_true</span><span>&quot;)
+</span><span>    parser.</span><span style="color:#bf616a;">add_argument</span><span>(&quot;</span><span style="color:#a3be8c;">-c</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">--bytes</span><span>&quot;, </span><span style="color:#bf616a;">action</span><span>=&quot;</span><span style="color:#a3be8c;">store_true</span><span>&quot;)
+</span><span>
+</span><span>    args = parser.</span><span style="color:#bf616a;">parse_args</span><span>()
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(
+</span><span>        </span><span style="color:#96b5b4;">format</span><span>(
+</span><span>            args.file,
+</span><span>            </span><span style="color:#bf616a;">count</span><span>(
+</span><span>                args.file.</span><span style="color:#bf616a;">read_text</span><span>(), </span><span style="color:#bf616a;">count_lines</span><span>=args.lines, </span><span style="color:#bf616a;">count_bytes</span><span>=args.bytes
+</span><span>            ),
+</span><span>        )
+</span><span>    )
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>__name__ == &quot;</span><span style="color:#a3be8c;">__main__</span><span>&quot;:
+</span><span>    </span><span style="color:#bf616a;">_cli</span><span>()
+</span></code></pre>
+<h2 id="steps-three-four-five-and-final-step">Steps Three, Four, Five and Final Step</h2>
+<p>Adding command line options <code>-w</code> (count words) and <code>-m</code> (count characters), is very similar to the previous step: write the tests for the <code>pyccwc.main.count</code> and <code>pyccwc.main.format</code> functions and then make the necessary changes to them so that tests pass. Therefore, I won't walk you through it. You will later find that we didn't really need to change <code>pyccwc.main.format</code> to work with the new tests, it just worked out of the box because <code>Counts</code> is a <code>NamedTuple</code>. Adding the default option (step five) is just another conditional and test that you can add yourself.</p>
+<p>For the final step, we want to read from standard input if no file is specified, so there are a few key changes we want to do here:</p>
+<ol>
+<li>Parse the file argument with <code>parser.add_argument(&quot;file&quot;, nargs=&quot;?&quot;, type=argparse.FileType(&quot;r&quot;), default=sys.stdin)</code>.</li>
+<li>Modify <code>count</code> so that it takes as <code>typing.TextIO</code> instead of <code>str</code>.</li>
+</ol>
+<p>You can see the final solution in <code>https://github.com/srcolinas/coding-challenges-solutions-python</code>. Please notice that we may not have covered all of the edge cases in the tests, we would just add some once discovered. Feel free to point it out in the repo.</p>
+<h2 id="food-for-thought">Food for Thought</h2>
+<p>I wrote the code so that it is easy to debug, change and, very importantly, easy to understand by the reader; however, I didn't write it so that performance of the function calls is optimized as much as possible. In particular, there are a few things to notice:</p>
+<ol>
+<li>Our current solution is $O(n \times m \times l)$ (for number of lines, characters and whitespaces) respectively. It could be made so that it is $O(n)$, whit $n$ being the number of characters.</li>
+<li>We throw a bunch of conditionals inside of the main <code>for</code> loop, which could probably avoided by defining some functions to call depending on the flags given; whether that is faster than the current solution is out of the scope of this post.</li>
+</ol>
+<p>Finally, the solution doesn't really match the output of <code>wc</code> for the number of characters, I just didn't want to spend more time on that; if you want to fix it, you can deep dive into locales, following the Coding Challenges guide on step three.</p>
+<hr />
+<p><a href="https://github.com/srcolinas/srcolinas.github.io/tree/master/_posts/2023-12-09-word-count.md">Suggest Edits</a></p>
+
+        
+        <div class="post-tags">
+          <p>Tags:
+            
+            <a href="https://srcolinas.github.io/tags/coding-challenges/">#Coding Challenges</a>
+            
+            <a href="https://srcolinas.github.io/tags/tdd/">#TDD</a>
+            
+          </p>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</article>
+
+
+  <hr>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <ul class="list-inline text-center">
+            
+            <li class="list-inline-item">
+              <a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;srcolinas&#x2F;">
+                <span class="fa-stack fa-lg">
+                  <i class="fas fa-circle fa-stack-2x"></i>
+                  <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
+                </span>
+              </a>
+            </li>
+            
+            <li class="list-inline-item">
+              <a href="https:&#x2F;&#x2F;srcolinas.github.io&#x2F;rss.xml">
+                <span class="fa-stack fa-lg">
+                  <i class="fas fa-circle fa-stack-2x"></i>
+                  <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                </span>
+              </a>
+            </li>
+            
+          </ul>
+          <p class="copyright text-muted">
+Copyright; Srcolinas
+<img src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.eu.svg" alt="Creative Commons License">
+</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="https://srcolinas.github.io/js/jquery.min.js"></script>
+  <script src="https://srcolinas.github.io/js/bootstrap.bundle.min.js"></script>
+
+  <!--Custom scripts for this template-->
+  <script src="https://srcolinas.github.io/js/clean-blog.min.js"></script>
+
+  <!--- Additional scripts -->
+  
+  
+</body>
+
+</html>
