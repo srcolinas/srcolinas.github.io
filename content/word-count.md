@@ -352,7 +352,7 @@ You can see the final solution in `https://github.com/srcolinas/coding-challenge
 ## Food for Thought
 
 I wrote the code so that it is easy to debug, change and, very importantly, easy to understand by the reader; however, I didn't write it so that performance of the function calls is optimized as much as possible. In particular, there are a few things to notice:
-1. Our current solution is $O(n \times m \times l)$ (for number of lines, characters and whitespaces) respectively. It could be made so that it is $O(n)$, whit $n$ being the number of characters.
+1. Our current solution is $O(n \times m \times l)$ (for number of lines, characters and whitespaces respectively). It could be made so that it is $O(n)$, whit $n$ being the number of characters.
 2. We throw a bunch of conditionals inside of the main `for` loop, which could probably avoided by defining some functions to call depending on the flags given; whether that is faster than the current solution is out of the scope of this post.
 
 Finally, the solution doesn't really match the output of `wc` for the number of characters, I just didn't want to spend more time on that; if you want to fix it, you can deep dive into locales, following the Coding Challenges guide on step three.
