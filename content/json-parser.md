@@ -69,7 +69,7 @@ from pyccjp import main
 
 
 @pytest.mark.parametrize("payload", [""])
-def test_1_for_invalid_json(payload: str, tmp_path: pathlib.Path):
+def test_should_return_1_for_invalid_json(payload: str, tmp_path: pathlib.Path):
     filepath = tmp_path / "invalid.json"
     filepath.write_text(payload)
 
@@ -89,7 +89,7 @@ def main(file: pathlib.Path) -> int:
 You may be surprised to see such implementation, but with TDD we try to do the minimal thing to make tests pass every time. Let me add an additional requirement that is not from the Coding Callenges side: return a status code of `2` if the given file doesn't exist. Let's start with the test again and add the following to `tests/test_main.py`:
 
 ```python
-def test_2_for_file_doesnot_exist(tmp_path: pathlib.Path):
+def test_should_return_2_if_file_doesnot_exist(tmp_path: pathlib.Path):
     filepath = tmp_path / "doesnot_exist.json"
 
     code = main.main(filepath)
@@ -111,7 +111,7 @@ Let's now move forward to the required valid JSON example at this step, by addin
 
 ```python
 @pytest.mark.parametrize("payload", [r"{}"])
-def test_0_for_valid_json(payload: str, tmp_path: pathlib.Path):
+def test_should_return_0_for_valid_json(payload: str, tmp_path: pathlib.Path):
     filepath = tmp_path / "valid.json"
     filepath.write_text(payload)
 
@@ -175,7 +175,7 @@ import pytest
 from pyccjp.parser import JsonSyntax, Token, parse
 
 @pytest.mark.parametrize("tokens", [[], [JsonSyntax.RIGHT_BRACE]])
-def test_ValueError_for_invalid_input(tokens: list[Token]):
+def test_should_raise_ValueError_for_invalid_input(tokens: list[Token]):
     tokens = iter(tokens)
     with pytest.raises(ValueError):
         parse(tokens)
@@ -510,6 +510,8 @@ Again, I will leave the implementation as an excercise. Just to avoid a longer a
 
 
 ## Food for Thought
+
+I don't know whether the test suite suggested by the Coding Challenges guide is complete or not, so you may still encounter issues with the end implementation from time to time. However, that's how it works: whenever you find a new piece of the spec that doesn't fit the programm, you update the tests and then update the code accordingly. By the way, keep in mind that this is an academic exercise on TDD, use standard JSON libraries in real life. 
 
 It is possible to come up with a solution that doesn't make use of iterators, we can instead make it with a list and the code may look simpler. However, I wanted to challenge myself making an implementation that only reads each character once and doesn't load the file into memory at once. I am sorry if that brought you unnecessary dificulties for you. 
 
