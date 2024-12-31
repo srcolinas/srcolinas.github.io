@@ -359,4 +359,4 @@ Finally, the solution doesn't really match the output of `wc` for the number of 
 
 ---
 
-[Suggest Edits](https://github.com/srcolinas/srcolinas.github.io/tree/master/_posts/2023-12-09-word-count.md)
+[Suggest Edits](https://github.com/srcolinas/srcolinas.github.io/tree/master/content/word-count.md)
