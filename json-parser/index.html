@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title></title>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="https://srcolinas.github.io/css/bootstrap.min.css">
+  <!-- Custom fonts for this template -->
+  <link href=" https://srcolinas.github.io/css/all.min.css" rel=" stylesheet" type="text/css">
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet'
+    type='text/css'>
+  <link
+    href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800'
+    rel='stylesheet' type='text/css'>
+
+  <!-- Custom styles for this template -->
+  <link rel="stylesheet" href="https://srcolinas.github.io/clean-blog.css">
+
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand" href="https:&#x2F;&#x2F;srcolinas.github.io"></a>
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
+        data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false"
+        aria-label="Toggle navigation">
+        Menu
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+          
+          <li class="nav-item">
+            <a class="nav-link"
+              href="https:&#x2F;&#x2F;srcolinas.github.io">Home</a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link"
+              href="https:&#x2F;&#x2F;srcolinas.github.io&#x2F;about">About</a>
+          </li>
+          
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  
+<!-- Page Header -->
+<header class="masthead" style="background-image: url('https://srcolinas.github.io/img/post-bg-2.png')">
+  <div class="overlay"></div>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <div class="post-heading">
+          
+<h1>Coding Challenges Solutions: JSON Parser</h1>
+<span class="meta">Posted by
+    <a href="#">Sebastian</a>
+    on 28 December 2024
+</span>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+  
+<!-- Post Content -->
+<article>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <p>Here I show how I solved the second of the codding challenges from <a href="https://codingchallenges.fyi">Coding Challenges</a>, which is about building a JSON parser from scratch using Test Driven Development. Please read the challenge description to learn more about what we will be solving here: https://codingchallenges.fyi/challenges/challenge-json-parser .</p>
+<p>If you just want to see the end code, you can jump to the final section of the blog, but that is not the goal of this post :) . The goal is to show the process of development using Test Driven Development. </p>
+<span id="continue-reading"></span><h2 id="step-zero">Step Zero</h2>
+<p>This step is just about the setup of the project. I have decided to use <a href="https://www.python.org/">Python</a> for this tutorial (version <code>3.12</code> to be precise), and the <a href="https://python-poetry.org/">Poetry packaging and dependency manager</a>. Please go through poetry's documentation and start a new project; running <code>poetry new pyccjp</code>, will take you to a project structure like:</p>
+<pre style="background-color:#1e1e1e;color:#dcdcdc;"><code><span>.
+</span><span>└── pyccjp
+</span><span>    ├── pyccjp
+</span><span>    ├── tests
+</span><span>    ├── README.md
+</span><span>    └── pyproject.toml
+</span></code></pre>
+<p>I called the project <code>pyccjp</code> because it is a json parser written in Python following the Coding Challenges guide. Since we are building the solultion from scratch, we will only need development dependencies, so go to the root of the project and do <code>poetry add --group dev mypy ruff pytest</code>. Before commiting any changes we should be able to run <code>poetry run ruff --fix .</code>, <code>poetry run ruff format .</code>, <code>poetry run mypy .</code> and <code>poetry run pytest tests/ -vv</code> without getting any error messages.</p>
+<h2 id="step-one">Step One</h2>
+<p>In this step we are required to write a command line program that returns <code>0</code> when given a valid JSON file and <code>1</code> otherwise; moreover, we are defining a JSON file as valid if it has <code>{}</code> as content and invalid otherwise. Let's create a <code>pyccjp/main.py</code> file with the following content:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">import </span><span>pathlib
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>main(file: pathlib.Path) -&gt; int:
+</span><span>    </span><span style="color:#569cd6;">raise </span><span>NotImplementedError
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>_cli() -&gt; </span><span style="color:#569cd6;">None</span><span>:
+</span><span>    </span><span style="color:#9b9b9b;">import </span><span>argparse
+</span><span>    </span><span style="color:#9b9b9b;">import </span><span>sys
+</span><span>
+</span><span>    parser = argparse.ArgumentParser()
+</span><span>    parser.add_argument(</span><span style="color:#d69d85;">&quot;file&quot;</span><span>, type=pathlib.Path)
+</span><span>
+</span><span>    args = parser.parse_args()
+</span><span>
+</span><span>    code = main(args.file)
+</span><span>    sys.exit(code)
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">if </span><span>__name__ == </span><span style="color:#d69d85;">&quot;__main__&quot;</span><span>:
+</span><span>    _cli()
+</span><span>
+</span></code></pre>
+<p>The <code>_cli</code> function doesn't have any meaningful logic, just boilerplate: it is one of the simplest ways to handle command line arguments in Python and returning status codes. I don't like to write test cases for such a simple piece of code, but I like to isolate it as much as possible. What we care about here is what we will later write inside the <code>main</code> function and we will develop the logic needed using Test Driven Development (TDD).</p>
+<p>Let's start with the piece of logic that handle invalid JSON files, create <code>tests/test_main.py</code> file and add the following content:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">import </span><span>pathlib
+</span><span>
+</span><span style="color:#9b9b9b;">import </span><span>pytest
+</span><span>
+</span><span style="color:#9b9b9b;">from </span><span>pyccjp </span><span style="color:#9b9b9b;">import </span><span>main
+</span><span>
+</span><span>
+</span><span>@pytest.mark.parametrize(</span><span style="color:#d69d85;">&quot;payload&quot;</span><span>, [</span><span style="color:#d69d85;">&quot;&quot;</span><span>])
+</span><span style="color:#569cd6;">def </span><span>test_should_return_1_for_invalid_json(payload: str, tmp_path: pathlib.Path):
+</span><span>    filepath = tmp_path / </span><span style="color:#d69d85;">&quot;invalid.json&quot;
+</span><span>    filepath.write_text(payload)
+</span><span>
+</span><span>    code = main.main(filepath)
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>code == </span><span style="color:#b5cea8;">1
+</span><span>
+</span></code></pre>
+<p>If you go to your terminal and run <code>poetry run pytest tests/ -vv</code> you will get one error message, which is what we expect for now. In case you are unfamiliar with how the test was written, I strongly suggest you to go through <a href="https://srcolinas.github.io/word-count/">my previous post about implementing the wc linux tool from scratch</a>. We now need to write the implementation, but whatever we write must pass that test. One possible implementation is the following:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>main(file: pathlib.Path) -&gt; int:
+</span><span>    </span><span style="color:#569cd6;">return </span><span style="color:#b5cea8;">1
+</span></code></pre>
+<p>You may be surprised to see such implementation, but with TDD we try to do the minimal thing to make tests pass every time. Let me add an additional requirement that is not from the Coding Callenges side: return a status code of <code>2</code> if the given file doesn't exist. Let's start with the test again and add the following to <code>tests/test_main.py</code>:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>test_should_return_2_if_file_doesnot_exist(tmp_path: pathlib.Path):
+</span><span>    filepath = tmp_path / </span><span style="color:#d69d85;">&quot;doesnot_exist.json&quot;
+</span><span>
+</span><span>    code = main.main(filepath)
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>code == </span><span style="color:#b5cea8;">2
+</span></code></pre>
+<p>That will help us reinforce the idea of adding minimial functionality every time, here is one possible solution:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>main(file: pathlib.Path) -&gt; int:
+</span><span>    </span><span style="color:#569cd6;">if not </span><span>file.exists():
+</span><span>        print(</span><span style="color:#d69d85;">&quot;File doesn&#39;t exist&quot;</span><span>)
+</span><span>        </span><span style="color:#569cd6;">return </span><span style="color:#b5cea8;">2
+</span><span>    </span><span style="color:#569cd6;">return </span><span style="color:#b5cea8;">1
+</span></code></pre>
+<p>Let's now move forward to the required valid JSON example at this step, by adding the following test to <code>tests/test_main.py</code>:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span>@pytest.mark.parametrize(</span><span style="color:#d69d85;">&quot;payload&quot;</span><span>, [</span><span style="color:#569cd6;">r</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">{}</span><span style="color:#d69d85;">&quot;</span><span>])
+</span><span style="color:#569cd6;">def </span><span>test_should_return_0_for_valid_json(payload: str, tmp_path: pathlib.Path):
+</span><span>    filepath = tmp_path / </span><span style="color:#d69d85;">&quot;valid.json&quot;
+</span><span>    filepath.write_text(payload)
+</span><span>
+</span><span>    code = main.main(filepath)
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>code == </span><span style="color:#b5cea8;">0
+</span></code></pre>
+<p>Again, we are back at having a failing test and we want to make it work with the following implementation for <code>main</code>:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">from </span><span>collections.abc </span><span style="color:#9b9b9b;">import </span><span>Iterator
+</span><span>
+</span><span style="color:#9b9b9b;">from . import </span><span>lexer, parser
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>main(file: pathlib.Path) -&gt; int:
+</span><span>    </span><span style="color:#569cd6;">if not </span><span>file.exists():
+</span><span>        print(</span><span style="color:#d69d85;">&quot;File doesn&#39;t exist&quot;</span><span>)
+</span><span>        </span><span style="color:#569cd6;">return </span><span style="color:#b5cea8;">2
+</span><span>    
+</span><span>    </span><span style="color:#569cd6;">try</span><span>:
+</span><span>        parser.parse(lexer.lex(_character_iterator(file)))
+</span><span>    </span><span style="color:#569cd6;">except </span><span>ValueError:
+</span><span>        print(</span><span style="color:#d69d85;">&quot;File has invalid content&quot;</span><span>)
+</span><span>        </span><span style="color:#569cd6;">return </span><span style="color:#b5cea8;">1
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">return </span><span style="color:#b5cea8;">0
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>_character_iterator(file: pathlib.Path) -&gt; Iterator[str]:
+</span><span>    </span><span style="color:#569cd6;">with </span><span>open(file, </span><span style="color:#d69d85;">&quot;r&quot;</span><span>) </span><span style="color:#569cd6;">as </span><span>f:
+</span><span>        </span><span style="color:#569cd6;">for </span><span>line </span><span style="color:#569cd6;">in </span><span>f:
+</span><span>            </span><span style="color:#569cd6;">for </span><span>c </span><span style="color:#569cd6;">in </span><span>line:
+</span><span>                </span><span style="color:#569cd6;">yield </span><span>c
+</span><span style="color:#608b4e;"># [...]
+</span></code></pre>
+<p>Before you feel like I added too much out of nowhere, let me explain. The Coding Challenges guide asks us to write a simple lexer and parser for this step. If you are unfamiliar with these two concepts, do not worry, the idea is getting familiar through the development of the challenges. It turns out that there are two very important steps to write a parsing tool, which even compilers use: Lexical Analysis and Syntactical Analysis. You can read about them on your own, but, roughly speaking, the first is about processing relevant characters into understandable tokens and the second is about putting those tokens together in a way that we can work with (Python's dictionaries and lists with strings, numbers, booleans and nulls, possibly with nested dictionaries and lists).</p>
+<p>I still need to walk you through the implementation of <code>parse</code> and <code>lex</code>. Let's define the interface needed for parsing (save it in <code>pyccjp/parser.py</code>):</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">import </span><span>enum
+</span><span style="color:#9b9b9b;">from </span><span>typing </span><span style="color:#9b9b9b;">import </span><span>Any, Iterator
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">class </span><span>JsonSyntax(</span><span style="color:#4ec9b0;">enum.Enum</span><span>):
+</span><span>    LEFT_BRACE = </span><span style="color:#b5cea8;">0
+</span><span>    RIGHT_BRACE = </span><span style="color:#b5cea8;">1
+</span><span>
+</span><span>type Token = JsonSyntax
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>parse(tokens: Iterator[Token]) -&gt; dict[str, Any]: </span><span style="color:#569cd6;">...
+</span></code></pre>
+<p>Now we need some tests to make sure it works as expected at this step. </p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">import </span><span>pytest
+</span><span>
+</span><span style="color:#9b9b9b;">from </span><span>pyccjp.parser </span><span style="color:#9b9b9b;">import </span><span>JsonSyntax, Token, parse
+</span><span>
+</span><span>@pytest.mark.parametrize(</span><span style="color:#d69d85;">&quot;tokens&quot;</span><span>, [[], [JsonSyntax.RIGHT_BRACE]])
+</span><span style="color:#569cd6;">def </span><span>test_should_raise_ValueError_for_invalid_input(tokens: list[Token]):
+</span><span>    tokens = iter(tokens)
+</span><span>    </span><span style="color:#569cd6;">with </span><span>pytest.raises(ValueError):
+</span><span>        parse(tokens)
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_parses_empty_object():
+</span><span>    tokens = iter([JsonSyntax.LEFT_BRACE, JsonSyntax.RIGHT_BRACE])
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>parse(tokens) == {}
+</span></code></pre>
+<p>It is trivial to write a function that passes the tests once one is familiar with iterators, exceptions and enums in Python, so let's add fix our <code>parse</code> function:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>parse(
+</span><span>    tokens: Iterator[Token],
+</span><span>) -&gt; dict[str, Any]:
+</span><span>    </span><span style="color:#608b4e;"># If the the iterator doesn&#39;t produce
+</span><span>    </span><span style="color:#608b4e;"># any tokens, we have nothing to parse
+</span><span>    </span><span style="color:#608b4e;"># and therefore we have an error
+</span><span>    </span><span style="color:#569cd6;">try</span><span>:
+</span><span>        lead = next(tokens)
+</span><span>    </span><span style="color:#569cd6;">except </span><span>StopIteration:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>ValueError
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">if </span><span>lead </span><span style="color:#569cd6;">is not </span><span>JsonSyntax.LEFT_BRACE:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>ValueError(</span><span style="color:#569cd6;">f</span><span style="color:#d69d85;">&quot;incorrect leading token&quot;</span><span>)
+</span><span>    
+</span><span>    tail = next(tokens)
+</span><span>    </span><span style="color:#569cd6;">if </span><span>tail </span><span style="color:#569cd6;">is not </span><span>JsonSyntax.RIGHT_BRACE:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>ValueError(</span><span style="color:#569cd6;">f</span><span style="color:#d69d85;">&quot;incorrect finish token&quot;</span><span>)
+</span><span>    </span><span style="color:#569cd6;">return </span><span>{}
+</span><span>
+</span></code></pre>
+<p>Now, we need to make sure we can process characters as they come by, for which the <code>lex</code> function is responsible. The tests we need to make for it at this step are (write it in <code>tests/test_lex.py</code>):</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">import </span><span>pytest
+</span><span>
+</span><span style="color:#9b9b9b;">from </span><span>pyccjp.lexer </span><span style="color:#9b9b9b;">import </span><span>lex, JsonSyntax, Token
+</span><span>
+</span><span>
+</span><span>@pytest.mark.parametrize(
+</span><span>    </span><span style="color:#d69d85;">&quot;payload,expected&quot;</span><span>,
+</span><span>    [
+</span><span>        (</span><span style="color:#d69d85;">&quot;&quot;</span><span>, []),
+</span><span>        (</span><span style="color:#d69d85;">&quot;  &quot;</span><span>, []),
+</span><span>        (</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">\n</span><span style="color:#d69d85;">&quot;</span><span>, []),
+</span><span>        (</span><span style="color:#d69d85;">&quot;{&quot;</span><span>, [JsonSyntax.LEFT_BRACE]),
+</span><span>        (</span><span style="color:#d69d85;">&quot;}&quot;</span><span>, [JsonSyntax.RIGHT_BRACE]),
+</span><span>        (</span><span style="color:#d69d85;">&quot;</span><span style="color:#b4cea8;">{}</span><span style="color:#d69d85;">&quot;</span><span>, [JsonSyntax.LEFT_BRACE, JsonSyntax.RIGHT_BRACE]),
+</span><span>        (</span><span style="color:#d69d85;">&quot;</span><span style="color:#b4cea8;">{}</span><span style="color:#e3bbab;">\n</span><span style="color:#d69d85;">&quot;</span><span>, [JsonSyntax.LEFT_BRACE, JsonSyntax.RIGHT_BRACE]),
+</span><span>        (</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">\n</span><span style="color:#b4cea8;">{}</span><span style="color:#d69d85;">&quot;</span><span>, [JsonSyntax.LEFT_BRACE, JsonSyntax.RIGHT_BRACE]),
+</span><span>        (</span><span style="color:#d69d85;">&quot;{</span><span style="color:#e3bbab;">\n</span><span style="color:#d69d85;">}&quot;</span><span>, [JsonSyntax.LEFT_BRACE, JsonSyntax.RIGHT_BRACE]),
+</span><span>    ],
+</span><span>)
+</span><span style="color:#569cd6;">def </span><span>test_handling_of_braces_and_empty_strings(payload: str, expected: list[Token]):
+</span><span>    tokens = lex(iter(payload))
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>list(tokens) == expected
+</span></code></pre>
+<p>Note that I added more tests than the original Coding Challenges guide requires for this step, but I feel they are what we need with the characters we are processing now. To be able to pass those tests, I came up with the following implementation for <code>pyccjp/lexer.py</code>:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">from </span><span>collections.abc </span><span style="color:#9b9b9b;">import </span><span>Iterator
+</span><span>
+</span><span style="color:#9b9b9b;">from .</span><span>parser </span><span style="color:#9b9b9b;">import </span><span>Token, JsonSyntax
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>lex(payload: Iterator[str]) -&gt; Iterator[Token]:
+</span><span>    </span><span style="color:#569cd6;">for </span><span>c </span><span style="color:#569cd6;">in </span><span>payload:
+</span><span>        </span><span style="color:#569cd6;">if </span><span>c == </span><span style="color:#d69d85;">&quot;{&quot;</span><span>:
+</span><span>            </span><span style="color:#569cd6;">yield </span><span>JsonSyntax.LEFT_BRACE
+</span><span>        </span><span style="color:#569cd6;">elif </span><span>c == </span><span style="color:#d69d85;">&quot;}&quot;</span><span>:
+</span><span>            </span><span style="color:#569cd6;">yield </span><span>JsonSyntax.RIGHT_BRACE
+</span></code></pre>
+<p>Finally, add the following to <code>pyproject.toml</code> so that you can run the CLI tool using real files found in your laptop (lke the ones suggested for testing each step by the Coding Challenges guide):</p>
+<pre data-lang="toml" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[</span><span style="color:#808080;">tool.poetry.scripts</span><span>]
+</span><span style="color:#569cd6;">pyccjp </span><span>= </span><span style="color:#d69d85;">&quot;pyccjp.main:_cli&quot;
+</span></code></pre>
+<p>To call the tool you can do <code>poetry run pyccjp [PATH_TO_FILE]</code>.</p>
+<h2 id="steps-two-and-three">Steps Two and Three</h2>
+<p>To avoid being repetitive, I decided to merge the steps two and three into one for this post. They are about handling scalar types in JSON, that is, we need to handle objects with string, numeric, booleans and null types. The Coding Challenges guide suggests to run a specific set of tests at every step, so we will add them to <code>test/test_main.py</code> but I will not show it here; instead, I will focus on the tests needed for the <code>lex</code> and <code>parse</code> functions, otherwise this blog becomes more long and boring than needed. </p>
+<p>Let's start by modifing <code>pyccjp/parser.py</code>, to account for the new set of syntactic elements we need to handle:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#608b4e;"># [...]
+</span><span style="color:#569cd6;">class </span><span>JsonSyntax(</span><span style="color:#4ec9b0;">enum.Enum</span><span>):
+</span><span>    LEFT_BRACE = </span><span style="color:#b5cea8;">0
+</span><span>    RIGHT_BRACE = </span><span style="color:#b5cea8;">1
+</span><span>    COLON = </span><span style="color:#b5cea8;">2
+</span><span>    COMMA = </span><span style="color:#b5cea8;">3
+</span><span>
+</span><span>type Token = JsonSyntax | str | bool | int | float | </span><span style="color:#569cd6;">None
+</span><span style="color:#608b4e;"># [...]
+</span></code></pre>
+<p>Now add tests to <code>tests/test_parser.py</code> so that we check our <code>parse</code> function:</p>
+<ol>
+<li>Can handle all scalar types:</li>
+<li>Raises <code>ValueError</code> when new possible tokens are given in wrong order.</li>
+<li>Handles object with multiple key value pairs.</li>
+</ol>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span>@pytest.mark.parametrize(
+</span><span>    </span><span style="color:#d69d85;">&quot;tokens&quot;</span><span>,
+</span><span>    [
+</span><span>        [],
+</span><span>        [JsonSyntax.RIGHT_BRACE],
+</span><span>        [JsonSyntax.RIGHT_BRACE, JsonSyntax.LEFT_BRACE],
+</span><span>        [JsonSyntax.LEFT_BRACE, JsonSyntax.COLON],
+</span><span>        [JsonSyntax.LEFT_BRACE, JsonSyntax.COMMA],
+</span><span>        [JsonSyntax.LEFT_BRACE, JsonSyntax.RIGHT_BRACE, JsonSyntax.COMMA],
+</span><span>        [JsonSyntax.LEFT_BRACE, </span><span style="color:#d69d85;">&quot;key&quot;</span><span>, JsonSyntax.RIGHT_BRACE],
+</span><span>        [JsonSyntax.LEFT_BRACE, </span><span style="color:#d69d85;">&quot;key&quot;</span><span>, JsonSyntax.COMMA, JsonSyntax.RIGHT_BRACE],
+</span><span>    ],
+</span><span>)
+</span><span style="color:#569cd6;">def </span><span>test_should_raise_ValueError_for_invalid_input(tokens: list[Token]):
+</span><span>    tokens = iter(tokens)
+</span><span>    </span><span style="color:#569cd6;">with </span><span>pytest.raises(ValueError):
+</span><span>        parse(tokens)
+</span><span>
+</span><span>
+</span><span>@pytest.mark.parametrize(</span><span style="color:#d69d85;">&quot;value&quot;</span><span>, [</span><span style="color:#569cd6;">True</span><span>, </span><span style="color:#569cd6;">False</span><span>, </span><span style="color:#b5cea8;">3</span><span>, </span><span style="color:#b5cea8;">3.14</span><span>, </span><span style="color:#d69d85;">&quot;pi&quot;</span><span>, </span><span style="color:#569cd6;">None</span><span>])
+</span><span style="color:#569cd6;">def </span><span>test_parses_object_with_scalar_value_types(value: bool | int | float | str | </span><span style="color:#569cd6;">None</span><span>):
+</span><span>    iterator = iter(
+</span><span>        [
+</span><span>            JsonSyntax.LEFT_BRACE,
+</span><span>            </span><span style="color:#d69d85;">&quot;key&quot;</span><span>,
+</span><span>            JsonSyntax.COLON,
+</span><span>            value,
+</span><span>            JsonSyntax.RIGHT_BRACE,
+</span><span>        ]
+</span><span>    )
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>parse(iterator) == {</span><span style="color:#d69d85;">&quot;key&quot;</span><span>: value}
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_parses_object_with_multiple_scalar_values():
+</span><span>    iterator = iter(
+</span><span>        [
+</span><span>            JsonSyntax.LEFT_BRACE, 
+</span><span>            </span><span style="color:#d69d85;">&quot;true&quot;</span><span>, JsonSyntax.COLON, </span><span style="color:#569cd6;">True</span><span>, JsonSyntax.COMMA,
+</span><span>            </span><span style="color:#d69d85;">&quot;false&quot;</span><span>, JsonSyntax.COLON, </span><span style="color:#569cd6;">False</span><span>, JsonSyntax.COMMA,
+</span><span>            </span><span style="color:#d69d85;">&quot;null&quot;</span><span>, JsonSyntax.COLON, </span><span style="color:#569cd6;">None</span><span>, JsonSyntax.COMMA, 
+</span><span>            </span><span style="color:#d69d85;">&quot;float&quot;</span><span>, JsonSyntax.COLON, </span><span style="color:#b5cea8;">3.14</span><span>, JsonSyntax.COMMA,
+</span><span>            </span><span style="color:#d69d85;">&quot;int&quot;</span><span>, JsonSyntax.COLON, </span><span style="color:#b5cea8;">3</span><span>, JsonSyntax.COMMA, 
+</span><span>            </span><span style="color:#d69d85;">&quot;string&quot;</span><span>, JsonSyntax.COLON, </span><span style="color:#d69d85;">&quot;pi&quot;</span><span>,
+</span><span>            JsonSyntax.RIGHT_BRACE,
+</span><span>        ]
+</span><span>    )
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>parse(iterator) == {
+</span><span>        </span><span style="color:#d69d85;">&quot;true&quot;</span><span>: </span><span style="color:#569cd6;">True</span><span>, </span><span style="color:#d69d85;">&quot;false&quot;</span><span>: </span><span style="color:#569cd6;">False</span><span>, </span><span style="color:#d69d85;">&quot;null&quot;</span><span>: </span><span style="color:#569cd6;">None</span><span>,
+</span><span>        </span><span style="color:#d69d85;">&quot;float&quot;</span><span>: </span><span style="color:#b5cea8;">3.14</span><span>, </span><span style="color:#d69d85;">&quot;int&quot;</span><span>: </span><span style="color:#b5cea8;">3</span><span>, </span><span style="color:#d69d85;">&quot;string&quot;</span><span>: </span><span style="color:#d69d85;">&quot;pi&quot;</span><span>,
+</span><span>    }
+</span></code></pre>
+<p>I came up with the following solution:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#608b4e;"># [...]
+</span><span style="color:#569cd6;">def </span><span>parse(
+</span><span>    tokens: Iterator[Token],
+</span><span>) -&gt; dict[str, Any]:
+</span><span>    </span><span style="color:#608b4e;"># If the the iterator doesn&#39;t produce
+</span><span>    </span><span style="color:#608b4e;"># any tokens, we have nothing to parse
+</span><span>    </span><span style="color:#608b4e;"># and therefore we have an error
+</span><span>    </span><span style="color:#569cd6;">try</span><span>:
+</span><span>        lead = next(tokens)
+</span><span>    </span><span style="color:#569cd6;">except </span><span>StopIteration:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>ValueError
+</span><span>    </span><span style="color:#569cd6;">if </span><span>lead </span><span style="color:#569cd6;">is </span><span>JsonSyntax.LEFT_BRACE:
+</span><span>        result = _parse_object(tokens)
+</span><span>    </span><span style="color:#569cd6;">else</span><span>:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>ValueError(</span><span style="color:#569cd6;">f</span><span style="color:#d69d85;">&quot;invalid leading token </span><span>{lead}</span><span style="color:#d69d85;">&quot;</span><span>)
+</span><span>
+</span><span>    </span><span style="color:#608b4e;"># If, after the object was closed there are still
+</span><span>    </span><span style="color:#608b4e;"># tokens left to handle, that should be an error
+</span><span>    </span><span style="color:#569cd6;">for </span><span>t </span><span style="color:#569cd6;">in </span><span>tokens:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>ValueError(</span><span style="color:#569cd6;">f</span><span style="color:#d69d85;">&quot;invalid end character </span><span>{t}</span><span style="color:#d69d85;">&quot;</span><span>)
+</span><span>    </span><span style="color:#569cd6;">return </span><span>result
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>_parse_object(tokens: Iterator[Token]) -&gt; dict[str, Any]:
+</span><span>    result: dict[str, Any] = {}
+</span><span>    </span><span style="color:#569cd6;">for </span><span>key </span><span style="color:#569cd6;">in </span><span>tokens:
+</span><span>        </span><span style="color:#569cd6;">if </span><span>key </span><span style="color:#569cd6;">is </span><span>JsonSyntax.RIGHT_BRACE:
+</span><span>            </span><span style="color:#569cd6;">return </span><span>result
+</span><span>        </span><span style="color:#569cd6;">if </span><span>key </span><span style="color:#569cd6;">is </span><span>JsonSyntax.COMMA:
+</span><span>            </span><span style="color:#569cd6;">try</span><span>:
+</span><span>                key = next(tokens)
+</span><span>            </span><span style="color:#569cd6;">except </span><span>StopIteration:
+</span><span>                </span><span style="color:#569cd6;">raise </span><span>ValueError
+</span><span>
+</span><span>        </span><span style="color:#569cd6;">if not </span><span>isinstance(key, str):
+</span><span>            </span><span style="color:#569cd6;">raise </span><span>ValueError(</span><span style="color:#569cd6;">f</span><span style="color:#d69d85;">&quot;key </span><span>{key}</span><span style="color:#d69d85;"> should be a string&quot;</span><span>)
+</span><span>
+</span><span>        </span><span style="color:#569cd6;">if </span><span>next(tokens) </span><span style="color:#569cd6;">is not </span><span>JsonSyntax.COLON:
+</span><span>            </span><span style="color:#569cd6;">raise </span><span>ValueError
+</span><span>
+</span><span>        value = _handle_leading_token(next(tokens), tokens)
+</span><span>        result[key] = value
+</span><span>    </span><span style="color:#608b4e;"># If we didn&#39;t find the right brace and the iterator
+</span><span>    </span><span style="color:#608b4e;"># was consumed, the object is not closed properly
+</span><span>    </span><span style="color:#608b4e;"># and that should be an error.
+</span><span>    </span><span style="color:#569cd6;">raise </span><span>ValueError
+</span></code></pre>
+<p>You may think of other implementations that work and that is perfectly fine. The main goal here is to show the process of TDD, not to go deep into implementation details. I will leave the updates on <code>tests/test_lexer.py</code> and <code>pyccjp/lexer.py</code> up to you, but you can check my solution later. </p>
+<h2 id="steps-four-and-five">Steps Four and Five</h2>
+<p>Here we need to add support for (possibly nested) arrays and objects. So now, we update the <code>JsonSyntax</code> type to look as follows:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">class </span><span>JsonSyntax(</span><span style="color:#4ec9b0;">enum.Enum</span><span>):
+</span><span>    LEFT_BRACE = </span><span style="color:#b5cea8;">0
+</span><span>    RIGHT_BRACE = </span><span style="color:#b5cea8;">1
+</span><span>    COLON = </span><span style="color:#b5cea8;">2
+</span><span>    COMMA = </span><span style="color:#b5cea8;">3
+</span><span>    LEFT_BRACKET = </span><span style="color:#b5cea8;">4
+</span><span>    RIGHT_BRACKET = </span><span style="color:#b5cea8;">5
+</span></code></pre>
+<p>Let's add test cases to make sure we can handle arrays with scalar types, similar to what we did for objects in the previous steps:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span>@pytest.mark.parametrize(</span><span style="color:#d69d85;">&quot;value&quot;</span><span>, [</span><span style="color:#569cd6;">True</span><span>, </span><span style="color:#569cd6;">False</span><span>, </span><span style="color:#b5cea8;">3</span><span>, </span><span style="color:#b5cea8;">3.14</span><span>, </span><span style="color:#d69d85;">&quot;pi&quot;</span><span>, </span><span style="color:#569cd6;">None</span><span>])
+</span><span style="color:#569cd6;">def </span><span>test_parses_array_with_scalar_value_types(value: bool | int | float | str | </span><span style="color:#569cd6;">None</span><span>):
+</span><span>    iterator = iter(
+</span><span>        [
+</span><span>            JsonSyntax.LEFT_BRACKET,
+</span><span>            value,
+</span><span>            JsonSyntax.RIGHT_BRACKET,
+</span><span>        ]
+</span><span>    )
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>parse(iterator) == [value]
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_parses_array_with_multiple_scalar_values():
+</span><span>    iterator = iter(
+</span><span>        [
+</span><span>            JsonSyntax.LEFT_BRACKET, </span><span style="color:#569cd6;">True</span><span>, JsonSyntax.COMMA,
+</span><span>            </span><span style="color:#569cd6;">False</span><span>, JsonSyntax.COMMA, </span><span style="color:#569cd6;">None</span><span>, JsonSyntax.COMMA,
+</span><span>            </span><span style="color:#b5cea8;">3.14</span><span>, JsonSyntax.COMMA, </span><span style="color:#b5cea8;">3</span><span>, JsonSyntax.COMMA, 
+</span><span>            </span><span style="color:#d69d85;">&quot;pi&quot;</span><span>, JsonSyntax.RIGHT_BRACKET,
+</span><span>        ]
+</span><span>    )
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>parse(iterator) == [</span><span style="color:#569cd6;">True</span><span>, </span><span style="color:#569cd6;">False</span><span>, </span><span style="color:#569cd6;">None</span><span>, </span><span style="color:#b5cea8;">3.14</span><span>, </span><span style="color:#b5cea8;">3</span><span>, </span><span style="color:#d69d85;">&quot;pi&quot;</span><span>]
+</span></code></pre>
+<p>Note that we can add more cases to raise <code>ValueError</code> as we did previously, but I just decided not to show it her, try to come up with the those tests on your own. My solution updates the <code>parse</code> function as follows:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#608b4e;"># [...]
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>parse(
+</span><span>    tokens: Iterator[Token],
+</span><span>) -&gt; dict[str, Any] | list[Any]:
+</span><span>    </span><span style="color:#608b4e;"># If the the iterator doesn&#39;t produce
+</span><span>    </span><span style="color:#608b4e;"># any tokens, we have nothing to parse
+</span><span>    </span><span style="color:#608b4e;"># and therefore we have an error
+</span><span>    </span><span style="color:#569cd6;">try</span><span>:
+</span><span>        lead = next(tokens)
+</span><span>    </span><span style="color:#569cd6;">except </span><span>StopIteration:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>ValueError
+</span><span>    </span><span style="color:#569cd6;">if </span><span>lead </span><span style="color:#569cd6;">is </span><span>JsonSyntax.LEFT_BRACE:
+</span><span>        result = _parse_object(tokens)
+</span><span>    </span><span style="color:#569cd6;">elif </span><span>lead </span><span style="color:#569cd6;">is </span><span>JsonSyntax.LEFT_BRACKET:
+</span><span>        result = _parse_array(tokens)
+</span><span>    </span><span style="color:#569cd6;">else</span><span>:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>ValueError(</span><span style="color:#569cd6;">f</span><span style="color:#d69d85;">&quot;invalid leading token </span><span>{lead}</span><span style="color:#d69d85;">&quot;</span><span>)
+</span><span>
+</span><span>    </span><span style="color:#608b4e;"># If, after the object was closed there are still
+</span><span>    </span><span style="color:#608b4e;"># tokens left to handle, that should be an error
+</span><span>    </span><span style="color:#569cd6;">for </span><span>t </span><span style="color:#569cd6;">in </span><span>tokens:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>ValueError(</span><span style="color:#569cd6;">f</span><span style="color:#d69d85;">&quot;invalid end character </span><span>{t}</span><span style="color:#d69d85;">&quot;</span><span>)
+</span><span>    </span><span style="color:#569cd6;">return </span><span>result
+</span><span>
+</span><span style="color:#608b4e;"># [...]
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>_parse_array(tokens: Iterator[Token]) -&gt; list[Any]:
+</span><span>    </span><span style="color:#569cd6;">...
+</span></code></pre>
+<p>Again, I have decided not to show the implementation of <code>_parse_array</code> so that you have a chance to do it on your own. </p>
+<p>Now comes the trickiest piece. We need to support arrays and objects that can be nested, here are some test cases I thought about to do this:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>test_parses_object_with_empty_object_value():
+</span><span>    iterator = iter(
+</span><span>        [
+</span><span>            JsonSyntax.LEFT_BRACE, </span><span style="color:#d69d85;">&quot;key&quot;</span><span>, JsonSyntax.COLON,
+</span><span>            JsonSyntax.LEFT_BRACE, JsonSyntax.RIGHT_BRACE, 
+</span><span>            JsonSyntax.RIGHT_BRACE,
+</span><span>        ]
+</span><span>    )
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>parse(iterator) == {</span><span style="color:#d69d85;">&quot;key&quot;</span><span>: {}}
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_parses_object_with_empty_array_value():
+</span><span>    iterator = iter(
+</span><span>        [
+</span><span>            JsonSyntax.LEFT_BRACE, </span><span style="color:#d69d85;">&quot;key&quot;</span><span>, JsonSyntax.COLON,
+</span><span>            JsonSyntax.LEFT_BRACKET, JsonSyntax.RIGHT_BRACKET,
+</span><span>            JsonSyntax.RIGHT_BRACE,
+</span><span>        ]
+</span><span>    )
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>parse(iterator) == {</span><span style="color:#d69d85;">&quot;key&quot;</span><span>: []}
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_parses_object_in_list():
+</span><span>    iterator = iter(
+</span><span>        [
+</span><span>            JsonSyntax.LEFT_BRACKET, JsonSyntax.LEFT_BRACE,
+</span><span>            JsonSyntax.RIGHT_BRACE, JsonSyntax.RIGHT_BRACKET,
+</span><span>        ]
+</span><span>    )
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>parse(iterator) == [{}]
+</span><span>
+</span></code></pre>
+<p>The rest of the challenge is left as an exercise. </p>
+<h2 id="food-for-thought">Food for Thought</h2>
+<p>My main goal was to guide your through the process of software development with TDD, but you can see the final solution in <code>https://github.com/srcolinas/codingchallenges_solutions/tree/main/json_parser/pyccjp</code> if you want to compare against yours.</p>
+<p>A few things to keep in mind:</p>
+<ul>
+<li>I don't know whether the test suite suggested by the Coding Challenges guide is complete or not, so you may still encounter issues with the end implementation from time to time. However, that's how it works: whenever you find a new piece of the spec that doesn't fit the programm, you update the tests and then update the code accordingly.</li>
+<li>Keep in mind that this is an academic exercise on TDD, use standard JSON libraries in real life. </li>
+<li>It is possible to come up with a solution that doesn't make use of iterators, we can instead make it with a <code>list</code>. Here I wanted to challenge myself making an implementation that only reads each character once and doesn't load the whole file into memory. I am sorry if that brought you unnecessary dificulties for you. </li>
+</ul>
+<hr />
+<p><a href="https://github.com/srcolinas/srcolinas.github.io/tree/master/content/json-parser.md">Suggest Edits</a></p>
+
+        
+        <div class="post-tags">
+          <p>Tags:
+            
+            <a href="https://srcolinas.github.io/tags/coding-challenges/">#Coding Challenges</a>
+            
+            <a href="https://srcolinas.github.io/tags/tdd/">#TDD</a>
+            
+          </p>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</article>
+
+
+  <hr>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <ul class="list-inline text-center">
+            
+            <li class="list-inline-item">
+              <a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;srcolinas&#x2F;">
+                <span class="fa-stack fa-lg">
+                  <i class="fas fa-circle fa-stack-2x"></i>
+                  <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
+                </span>
+              </a>
+            </li>
+            
+            <li class="list-inline-item">
+              <a href="https:&#x2F;&#x2F;srcolinas.github.io&#x2F;rss.xml">
+                <span class="fa-stack fa-lg">
+                  <i class="fas fa-circle fa-stack-2x"></i>
+                  <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                </span>
+              </a>
+            </li>
+            
+          </ul>
+          <p class="copyright text-muted">
+Copyright; Srcolinas
+<img src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.eu.svg" alt="Creative Commons License">
+</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="https://srcolinas.github.io/js/jquery.min.js"></script>
+  <script src="https://srcolinas.github.io/js/bootstrap.bundle.min.js"></script>
+
+  <!--Custom scripts for this template-->
+  <script src="https://srcolinas.github.io/js/clean-blog.min.js"></script>
+
+  <!--- Additional scripts -->
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+</script>
+
+</body>
+
+</html>
