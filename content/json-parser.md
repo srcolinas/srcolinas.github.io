@@ -7,7 +7,9 @@ categories = ["Guides"]
 tags = ["Coding Challenges", "TDD"]
 +++
 
-Here I show how I solved the second of the codding challenges from [Coding Challenges](https://codingchallenges.fyi), which is about building a JSON parser from scratch. Please read the challenge description to learn more about what we will be solving here: https://codingchallenges.fyi/challenges/challenge-json-parser
+Here I show how I solved the second of the codding challenges from [Coding Challenges](https://codingchallenges.fyi), which is about building a JSON parser from scratch using Test Driven Development. Please read the challenge description to learn more about what we will be solving here: https://codingchallenges.fyi/challenges/challenge-json-parser .
+
+If you just want to see the end code, you can jump to the final section of the blog, but that is not the goal of this post :) . The goal is to show the process of development using Test Driven Development. 
 
 <!-- more -->
 
@@ -149,7 +151,7 @@ def _character_iterator(file: pathlib.Path) -> Iterator[str]:
 # [...]
 ```
 
-Before you feel like I added too much out of nowhere, let me explain. The Coding Challenges guide asks us to write a simple lexer and parser for this step. If you are unfamiliar with these two concepts, do not worry, the idea is getting familiar through the development of the challenges. It turns out that there are two very important steps to write a parsing tool, which even compilers use: Lexical Analysis and Syntactical Analysis. You can read about them on your own, but, roughly speaking, the first is about processing relevant characters into understandable tokens and the second is about putting those tokens together in a way that is understandable (Python's dictionaries and lists with strings, numbers, booleans and nulls, possibly with nested dictionaries and lists).
+Before you feel like I added too much out of nowhere, let me explain. The Coding Challenges guide asks us to write a simple lexer and parser for this step. If you are unfamiliar with these two concepts, do not worry, the idea is getting familiar through the development of the challenges. It turns out that there are two very important steps to write a parsing tool, which even compilers use: Lexical Analysis and Syntactical Analysis. You can read about them on your own, but, roughly speaking, the first is about processing relevant characters into understandable tokens and the second is about putting those tokens together in a way that we can work with (Python's dictionaries and lists with strings, numbers, booleans and nulls, possibly with nested dictionaries and lists).
 
 I still need to walk you through the implementation of `parse` and `lex`. Let's define the interface needed for parsing (save it in `pyccjp/parser.py`):
 
@@ -191,11 +193,15 @@ It is trivial to write a function that passes the tests once one is familiar wit
 ```python
 def parse(
     tokens: Iterator[Token],
-) -> dict[str, Any] | list[Any]:
+) -> dict[str, Any]:
+    # If the the iterator doesn't produce
+    # any tokens, we have nothing to parse
+    # and therefore we have an error
     try:
         lead = next(tokens)
     except StopIteration:
         raise ValueError
+
     if lead is not JsonSyntax.LEFT_BRACE:
         raise ValueError(f"incorrect leading token")
     
@@ -233,7 +239,7 @@ def test_handling_of_braces_and_empty_strings(payload: str, expected: list[Token
     assert list(tokens) == expected
 ```
 
-Note that I added a few whitespaces here and there to make the tests more complete. To be able to pass those tests, I came up with the following implementation for `pyccjp/lexer.py`:
+Note that I added more tests than the original Coding Challenges guide requires for this step, but I feel they are what we need with the characters we are processing now. To be able to pass those tests, I came up with the following implementation for `pyccjp/lexer.py`:
 
 ```python
 from collections.abc import Iterator
@@ -249,7 +255,7 @@ def lex(payload: Iterator[str]) -> Iterator[Token]:
             yield JsonSyntax.RIGHT_BRACE
 ```
 
-I used the comment `[...]` to highlight that there is more code in the file, but you should be able to guess what it is. The new implementation seems a bit more complicated, but it helps us to have more testeable and easier to understand code. Finally, add the following to `pyproject.toml` so that you can run the CLI tool using real files found in your laptop (lke the ones suggested for testing each step by the Coding Challenges guide):
+Finally, add the following to `pyproject.toml` so that you can run the CLI tool using real files found in your laptop (lke the ones suggested for testing each step by the Coding Challenges guide):
 
 ```toml
 [tool.poetry.scripts]
@@ -275,8 +281,8 @@ class JsonSyntax(enum.Enum):
 type Token = JsonSyntax | str | bool | int | float | None
 # [...]
 ```
-Let's add tests to `tests/test_parser.py` so that we check our `parse` function:
-1. Can handle scalar types:
+Now add tests to `tests/test_parser.py` so that we check our `parse` function:
+1. Can handle all scalar types:
 2. Raises `ValueError` when new possible tokens are given in wrong order.
 3. Handles object with multiple key value pairs.
 
@@ -291,9 +297,10 @@ Let's add tests to `tests/test_parser.py` so that we check our `parse` function:
         [JsonSyntax.LEFT_BRACE, JsonSyntax.COMMA],
         [JsonSyntax.LEFT_BRACE, JsonSyntax.RIGHT_BRACE, JsonSyntax.COMMA],
         [JsonSyntax.LEFT_BRACE, "key", JsonSyntax.RIGHT_BRACE],
+        [JsonSyntax.LEFT_BRACE, "key", JsonSyntax.COMMA, JsonSyntax.RIGHT_BRACE],
     ],
 )
-def test_ValueError_for_invalid_input(tokens: list[Token]):
+def test_should_raise_ValueError_for_invalid_input(tokens: list[Token]):
     tokens = iter(tokens)
     with pytest.raises(ValueError):
         parse(tokens)
@@ -337,43 +344,38 @@ I came up with the following solution:
 
 ```python
 # [...]
-def parse(tokens: Iterator[Token]) -> dict[str, Any]:
+def parse(
+    tokens: Iterator[Token],
+) -> dict[str, Any]:
+    # If the the iterator doesn't produce
+    # any tokens, we have nothing to parse
+    # and therefore we have an error
     try:
         lead = next(tokens)
     except StopIteration:
         raise ValueError
-    if lead is not JsonSyntax.LEFT_BRACE:
-        raise ValueError(f"incorrect leading token")
-    
-    result = _parse_object(tokens)
-    _consume_until_end(tokens)
+    if lead is JsonSyntax.LEFT_BRACE:
+        result = _parse_object(tokens)
+    else:
+        raise ValueError(f"invalid leading token {lead}")
+
+    # If, after the object was closed there are still
+    # tokens left to handle, that should be an error
+    for t in tokens:
+        raise ValueError(f"invalid end character {t}")
     return result
 
-def _consume_until_end(tokens: Iterator[Token]) -> None:
-    i = -1
-    for i, t in enumerate(tokens):
-        if i > 0:
-            raise ValueError(f"incorrect finish token")
-        if t is JsonSyntax.RIGHT_BRACE:
-            break
-    else:
-        if i > -1:
-            raise ValueError(f"incorrect finish token")
-    for t in tokens:
-        raise ValueError(f"incorrect finish token")
-            
 
 def _parse_object(tokens: Iterator[Token]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key in tokens:
         if key is JsonSyntax.RIGHT_BRACE:
-            break
+            return result
         if key is JsonSyntax.COMMA:
             try:
                 key = next(tokens)
             except StopIteration:
                 raise ValueError
-            
 
         if not isinstance(key, str):
             raise ValueError(f"key {key} should be a string")
@@ -381,12 +383,12 @@ def _parse_object(tokens: Iterator[Token]) -> dict[str, Any]:
         if next(tokens) is not JsonSyntax.COLON:
             raise ValueError
 
-        value = next(tokens)
-        if not isinstance(value, (str, int, bool, float)) and value is not None:
-            raise ValueError(f"invalid value {value}")
+        value = _handle_leading_token(next(tokens), tokens)
         result[key] = value
-
-    return result
+    # If we didn't find the right brace and the iterator
+    # was consumed, the object is not closed properly
+    # and that should be an error.
+    raise ValueError
 ```
 
 You may think of other implementations that work and that is perfectly fine. The main goal here is to show the process of TDD, not to go deep into implementation details. I will leave the updates on `tests/test_lexer.py` and `pyccjp/lexer.py` up to you, but you can check my solution later. 
@@ -405,7 +407,7 @@ class JsonSyntax(enum.Enum):
     RIGHT_BRACKET = 5
 ```
 
-Let's add test cases to make sure we can handle arrays with scalar types, similar to what we did for objects in the previous step:
+Let's add test cases to make sure we can handle arrays with scalar types, similar to what we did for objects in the previous steps:
 
 ```python
 @pytest.mark.parametrize("value", [True, False, 3, 3.14, "pi", None])
@@ -433,12 +435,17 @@ def test_parses_array_with_multiple_scalar_values():
     assert parse(iterator) == [True, False, None, 3.14, 3, "pi"]
 ```
 
-Note that we can add more cases to raise `ValueError` as we did previously, but I just decided not to show it here. My solution updates the `parse` function as follows:
+Note that we can add more cases to raise `ValueError` as we did previously, but I just decided not to show it her, try to come up with the those tests on your own. My solution updates the `parse` function as follows:
 
 ```python
+# [...]
+
 def parse(
     tokens: Iterator[Token],
 ) -> dict[str, Any] | list[Any]:
+    # If the the iterator doesn't produce
+    # any tokens, we have nothing to parse
+    # and therefore we have an error
     try:
         lead = next(tokens)
     except StopIteration:
@@ -449,23 +456,20 @@ def parse(
         result = _parse_array(tokens)
     else:
         raise ValueError(f"invalid leading token {lead}")
-    
-    _consume_until_end(tokens)
+
+    # If, after the object was closed there are still
+    # tokens left to handle, that should be an error
+    for t in tokens:
+        raise ValueError(f"invalid end character {t}")
     return result
 
 # [...]
 
 def _parse_array(tokens: Iterator[Token]) -> list[Any]:
-    result: list[Any] = []
-    for t in tokens:
-        if t is JsonSyntax.RIGHT_BRACKET:
-            break
-        if t is JsonSyntax.COMMA:
-            continue
-        value = t
-        result.append(value)
-    return result
+    ...
 ```
+
+Again, I have decided not to show the implementation of `_parse_array` so that you have a chance to do it on your own. 
 
 Now comes the trickiest piece. We need to support arrays and objects that can be nested, here are some test cases I thought about to do this:
 
@@ -506,14 +510,17 @@ def test_parses_object_in_list():
 
 ```
 
-Again, I will leave the implementation as an excercise. Just to avoid a longer and more booring post than necessary. Likewise, the rest of the steps are also left as an excercise. You can see the final solution in `https://github.com/srcolinas/codingchallenges_solutions/tree/main/json_parser/pyccjp`
+The rest of the challenge is left as an exercise. 
 
 
 ## Food for Thought
 
-I don't know whether the test suite suggested by the Coding Challenges guide is complete or not, so you may still encounter issues with the end implementation from time to time. However, that's how it works: whenever you find a new piece of the spec that doesn't fit the programm, you update the tests and then update the code accordingly. By the way, keep in mind that this is an academic exercise on TDD, use standard JSON libraries in real life. 
+My main goal was to guide your through the process of software development with TDD, but you can see the final solution in `https://github.com/srcolinas/codingchallenges_solutions/tree/main/json_parser/pyccjp` if you want to compare against yours.
 
-It is possible to come up with a solution that doesn't make use of iterators, we can instead make it with a list and the code may look simpler. However, I wanted to challenge myself making an implementation that only reads each character once and doesn't load the file into memory at once. I am sorry if that brought you unnecessary dificulties for you. 
+A few things to keep in mind:
+* I don't know whether the test suite suggested by the Coding Challenges guide is complete or not, so you may still encounter issues with the end implementation from time to time. However, that's how it works: whenever you find a new piece of the spec that doesn't fit the programm, you update the tests and then update the code accordingly.
+* Keep in mind that this is an academic exercise on TDD, use standard JSON libraries in real life. 
+* It is possible to come up with a solution that doesn't make use of iterators, we can instead make it with a `list`. Here I wanted to challenge myself making an implementation that only reads each character once and doesn't load the whole file into memory. I am sorry if that brought you unnecessary dificulties for you. 
 
 ---
 
