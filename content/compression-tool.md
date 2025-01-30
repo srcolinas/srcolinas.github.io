@@ -198,9 +198,75 @@ def test_handles_three_elements():
     assert table == {"m": "00", "k": "01", "z": "1"}
 ```
 
-In real life, we never know whether our tests are covering every single edge case out there, so whatever I write and whatever you write may have ways to break. Usually that is the way it works: whenever we (or a user :( ) discover new ways to break our code, we should just update the test cases to reflect it and fix it.
+In real life, we never know whether our tests are covering every single edge case out there, so whatever I write and whatever you write may have ways to break. Usually that is the way it works: whenever we (or a user :( ) discover new ways to break our system, we should update the test cases to reflect it and fix it.
 
 Since the implementation is not the goal of the post, I will omit it for now.
+
+## Step four
+
+We are required to write the header of the output file. If you are not very much familiar with what programmers put into files and how, you may feel a bit lost. Basically, you can define a file format in any way you like, you define how it looks like internally and its extension (if any). The famous formats out there just happen to solve a common problem so nicely that people use them and they became standard. In this case, we will create one format that works for our purpose and that we don't really expect anyone else to use it, after all, this is an academic excercise, the world of compression is more more complex nowadays.
+
+What is most important for our file format is that it contains the necessary information to decode a compressed file. The haeder is the piece of the file that will allow us to map original characters to associated codes from the Huffman tree. There are a few ways to do this:
+
+* Write down the frequency table, so we can map characters to codes by reconstructing the tree. 
+* Serialize the tree somehow, so that we don't have to reconstruct it from the frequency table but from another perhaps more efficient representation.
+* Serialize the prefix code table, which contains all of the information needed from the tree. 
+
+We will go with the last approach. There are still many ways to do this, here is an idea:
+
+1. Each character shuold be a utf-8 encoded version of the original character (why? because we need the contents of the file to be written in bynary to take advantage of the compression that will arise from hufman codes). 
+2. Its code is going to be a hexadecimal representation of the number the code would be if it was a binary number (why? because writing the full code is not very efficient and not every code will fit in a single byte).
+3. Each character-code pair is going to be separated by a comma.
+4. Once we finish writing the table, we should write `\n**\n` to mark the section of the file where the compressed contents are meant to be written. 
+
+Now, if we had a table like `{"a": "11101001000", "à": "0"}`, we would end up with a file looking like:
+
+```
+a-748,\xc3\xa1-0
+**
+[...]
+```
+where `[...]` represents the contents of the file, but we will see how to do that in a later step. 
+
+How to test for that? Here are some ideas:
+
+```python
+from src import serialize
+
+
+def test_header_contains_ending():
+    header = serialize.create_header({"a": "0"})
+    parts = header.split(b"\n**\n")
+    assert len(parts) == 2
+
+def test_header_contains_table():
+    header = serialize.create_header({"a": "0"})
+    table, _ = header.split(b"\n**\n")
+    assert table == b"a-0"
+
+def test_header_doesnot_write_content():
+    header = serialize.create_header({"a": "0"})
+    _, content = header.split(b"\n**\n")
+    assert content == b""
+
+
+def test_characters_are_written_in_bytes_using_utf8_encoding():
+    header = serialize.create_header({"á": "0"})
+    table, _ = header.split(b"\n**\n")
+    assert table == b"\xc3\xa1-0"
+
+def test_codes_are_written_in_hexadecimal():
+    header = serialize.create_header({"a": "11101001000"})
+    table, _ = header.split(b"\n**\n")
+    assert table == b"a-748"
+```
+
+Go ahead and try to implement it yourself, try to solve one test case at the time! At this step we are also required to improve the tests of our `main` function to check that a file can be written with that header. I will ommit that part from this post.
+
+## Step five
+
+
+
 
 ## Food for Thought
 
