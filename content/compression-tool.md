@@ -119,13 +119,20 @@ def test_build_from_three_elements():
     second, thrid = cast(tuple[HuffmanTree, HuffmanTree], subtree.children)
 
     assert tree.weight == 33
+    assert tree.key is None
+    assert subtree.key is None
+    assert subtree.weight == 9
     assert subtree.children is not None
+    assert first.key == "m"
     assert first.children is None
-    assert first.weight == 2
+    assert first.weight == 24
+    assert second.key == "z"
     assert second.children is None
-    assert second.weight == 24
+    assert second.weight == 2
+    assert thrid.key == "k"
     assert thrid.children is None
     assert thrid.weight == 7
+
 ```
 
 Here is my implementation that works with all tests so far:
@@ -143,7 +150,7 @@ class HuffmanTree:
     children: tuple["HuffmanTree", "HuffmanTree"] | None = None
 
     def __lt__(self, other: "HuffmanTree") -> bool:
-        return self.weight > other.weight
+        return self.weight < other.weight
 
     @classmethod
     def from_frequenceies(
@@ -185,17 +192,17 @@ def test_handles_three_elements():
         weight=33,
         children=(
             HuffmanTree(
-                weight=31,
+                weight=9,
                 children=(
-                    HuffmanTree(weight=24, key="m"),
+                    HuffmanTree(weight=2, key="z"),
                     HuffmanTree(weight=7, key="k"),
                 ),
             ),
-            HuffmanTree(weight=2, key="z"),
+            HuffmanTree(weight=24, key="m"),
         ),
     )
     table = create_prefix_code_table(tree)
-    assert table == {"m": "00", "k": "01", "z": "1"}
+    assert table == {"z": "00", "k": "01", "m": "1"}
 ```
 
 In real life, we never know whether our tests are covering every single edge case out there, so whatever I write and whatever you write may have ways to break. Usually that is the way it works: whenever we (or a user :( ) discover new ways to break our system, we should update the test cases to reflect it and fix it.
@@ -204,71 +211,101 @@ Since the implementation is not the goal of the post, I will omit it for now.
 
 ## Step four
 
-We are required to write the header of the output file. If you are not very much familiar with what programmers put into files and how, you may feel a bit lost. Basically, you can define a file format in any way you like, you define how it looks like internally and its extension (if any). The famous formats out there just happen to solve a common problem so nicely that people use them and they became standard. In this case, we will create one format that works for our purpose and that we don't really expect anyone else to use it, after all, this is an academic excercise, the world of compression is more more complex nowadays.
+We are required to write the header of the output file. If you are not very much familiar with what programmers put into files and how, you may feel a bit lost. Basically, you can define a file format in any way you like, you define how it looks like internally and its extension (if any). The famous formats out there just happen to solve a common problem so nicely that people use them and they became standard. In this case, we will create one format that works for our purpose and that we don't really expect anyone else to use it, after all, this is an academic excercise, the world of compression is much more complex nowadays.
 
-What is most important for our file format is that it contains the necessary information to decode a compressed file. The haeder is the piece of the file that will allow us to map original characters to associated codes from the Huffman tree. There are a few ways to do this:
+What is most important for our file format is that it contains the necessary information to decode a compressed file. The haeder is the piece of the file that will allow us to map original characters to associated codes from the Huffman tree. Since we already have an implementation that buils a tree out of frequencies, let's serialize those frequencies as the header. We will do it as follows:
 
-* Write down the frequency table, so we can map characters to codes by reconstructing the tree. 
-* Serialize the tree somehow, so that we don't have to reconstruct it from the frequency table but from another perhaps more efficient representation.
-* Serialize the prefix code table, which contains all of the information needed from the tree. 
-
-We will go with the last approach. There are still many ways to do this, here is an idea:
-
-1. Each character shuold be a utf-8 encoded version of the original character (why? because we need the contents of the file to be written in bynary to take advantage of the compression that will arise from hufman codes). 
-2. Its code is going to be a hexadecimal representation of the number the code would be if it was a binary number (why? because writing the full code is not very efficient and not every code will fit in a single byte).
-3. Each character-code pair is going to be separated by a comma.
+1. Each character shuold be a utf-8 encoded version of the original character, because we need the contents of the file to be written in bytes to take advantage of the compression that will arise from hufman codes. 
+2. Its count will be an integer expressed as bytes, as storing the integer literals will take up more space (one byte per digit, while a single byte can hold more values).
+3. Each character-count pair is going to be separated by a comma.
 4. Once we finish writing the table, we should write `\n**\n` to mark the section of the file where the compressed contents are meant to be written. 
 
-Now, if we had a table like `{"a": "11101001000", "à": "0"}`, we would end up with a file looking like:
+Now, if we had frequencies like `{{"a": 12, "b": 256, "á": 1}`, we would end up with a file looking like:
 
 ```
-a-748,\xc3\xa1-0
+"a-\x0c,b-\x01\x00,\xc3\xa1-\x01"
 **
 [...]
 ```
 where `[...]` represents the contents of the file, but we will see how to do that in a later step. 
 
-How to test for that? Here are some ideas:
+How to test for that? Here is one idea:
 
 ```python
 from src import serialize
 
+@pytest.mark.parametrize(
+    "frequencies,header",
+    [
+        ({"a": 12}, b"a-\x0c"),
+        ({"a": 256}, b"a-\x01\x00"),
+        ({"a": 12, "b": 256}, b"a-\x0c,b-\x01\x00"),
+        ({"á": 1}, b"\xc3\xa1-\x01"),
+    ],
+)
+def test_header_values(frequencies: dict[str, int], header: bytes):
+    result = serialize.create_header(frequencies)
+    assert result.startswith(header)
+    assert result.endswith(b"\n**\n")
 
-def test_header_contains_ending():
-    header = serialize.create_header({"a": "0"})
-    parts = header.split(b"\n**\n")
-    assert len(parts) == 2
-
-def test_header_contains_table():
-    header = serialize.create_header({"a": "0"})
-    table, _ = header.split(b"\n**\n")
-    assert table == b"a-0"
 
 def test_header_doesnot_write_content():
-    header = serialize.create_header({"a": "0"})
+    header = serialize.create_header({"a": 0})
     _, content = header.split(b"\n**\n")
     assert content == b""
-
-
-def test_characters_are_written_in_bytes_using_utf8_encoding():
-    header = serialize.create_header({"á": "0"})
-    table, _ = header.split(b"\n**\n")
-    assert table == b"\xc3\xa1-0"
-
-def test_codes_are_written_in_hexadecimal():
-    header = serialize.create_header({"a": "11101001000"})
-    table, _ = header.split(b"\n**\n")
-    assert table == b"a-748"
 ```
 
 Go ahead and try to implement it yourself, try to solve one test case at the time! At this step we are also required to improve the tests of our `main` function to check that a file can be written with that header. I will ommit that part from this post.
 
 ## Step five
 
+Here we see how everything fits together. We understand how we managed to achieve compression and also the limits of our algorithm. The idea is that, since we have binary codes for each character, we can group them together to form bytes, so that a single character would take less than a byte.
 
+Here is a hypothetical example: suppose we have a text file whose only content is `abc` and somehow our prefix-code table looks like `{"a": "11", "b": "111", "c": "111"}`, then this means we would only need to store `\xff` in the file, instead of the bytes associated with each of the original characters (1 byte instead of 3).
 
+We need a function that takes in the contents of the source file and the prefix code table, we can define it as:
+
+```python
+def create_payload(source: str, table: dict[str, str]) -> bytes:
+    ...
+```
+
+which should at least pass the following tests:
+
+```python
+def test_single_character_payload_leads_to_single_byte():
+    result = serialize.create_payload("a", {"a": "0"})
+    assert result == b"\x00"
+
+def test_small_payload_codes_are_grouped_in_bytes():
+    result = serialize.create_payload(
+        "abc", {"a": "11", "b": "111", "c": "111"}
+    )
+    assert result == b"\xff"
+
+def test_big_payload_codes_are_grouped_in_bytes():
+    result = serialize.create_payload(
+        "ab", {"a": "1111111100000000", "b": "1111111100000000"}
+    )
+    assert result == b"\xff\x00\xff\x00"
+
+def test_last_bits_are_padded_into_a_byte():
+    result = serialize.create_payload(
+        "ab", {"a": "0000000011111", "b": "111"}
+    )
+    assert result == b"\x00\xff"
+```
+
+Again, try to make those test pass one at the time. 
 
 ## Food for Thought
+
+I ommited steps six and seven entirely to avoid a huge post, but you can check my full implementation at https://github.com/srcolinas/codingchallenges_solutions/tree/main/compression-tool
+
+Here are some things to think about:
+
+* Remember that the output file will also contain a hedear with the frequencies for each character, so the final amount of bytes is the bytes in the payload + the bytes in the header. If we have a large document, we will still achieve some compression, so that is fine.
+* I originally thought I didn't need to write the frequencies to the output file and then build the tree from that. I thought I could just write the prefix-code table and I would be able to restore a file. Think about why if you encounter the same issue. 
 
 
 ---
