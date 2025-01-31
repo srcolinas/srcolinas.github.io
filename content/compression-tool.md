@@ -220,7 +220,7 @@ What is most important for our file format is that it contains the necessary inf
 3. Each character-count pair is going to be separated by a comma.
 4. Once we finish writing the table, we should write `\n**\n` to mark the section of the file where the compressed contents are meant to be written. 
 
-Now, if we had frequencies like `{{"a": 12, "b": 256, "á": 1}`, we would end up with a file looking like:
+Now, if we had frequencies like `{"a": 12, "b": 256, "á": 1}`, we would end up with a file looking like:
 
 ```
 "a-\x0c,b-\x01\x00,\xc3\xa1-\x01"
@@ -300,12 +300,14 @@ Again, try to make those test pass one at the time.
 
 ## Food for Thought
 
-I ommited steps six and seven entirely to avoid a huge post, but you can check my full implementation at https://github.com/srcolinas/codingchallenges_solutions/tree/main/compression-tool
+I ommited steps six and seven entirely to avoid a huge post, but you can check my full implementation at [](https://github.com/srcolinas/codingchallenges_solutions/tree/main/compression-tool)
 
 Here are some things to think about:
 
 * Remember that the output file will also contain a hedear with the frequencies for each character, so the final amount of bytes is the bytes in the payload + the bytes in the header. If we have a large document, we will still achieve some compression, so that is fine.
-* I originally thought I didn't need to write the frequencies to the output file and then build the tree from that. I thought I could just write the prefix-code table and I would be able to restore a file. Think about why if you encounter the same issue. 
+* I originally thought I didn't need to write the frequencies to the output file and then build the tree from that. I thought I could just write the prefix-code table and I would be able to restore a file. Think about why if you encounter the same issue.
+* The test cases sometimes use objecs that would never appear in real life, like a tree with a particular structure; however, it is fine to use that for testing, since they are compact ways to highlight particular cases that we need to support in a particular implementation. 
+* It is nice to see a real application of data structures and algorithmos out there (did you notice depth first searh? :) ). I know there are many, but the world of high level languages an libraries makes us not to think about that too often). 
 
 
 ---
