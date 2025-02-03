@@ -221,7 +221,7 @@ Moreover, even if you don't have that issue at the begining of the file, you wil
 
 There may be many ways to go around this issue, but what I figured is that I could always move the last group of bits to the beggining of the file (so all other groups will perfectly have size 8) and that I could add a `1` to the front of that group, which is meant to be ignored (so that we know when the relevant "0"s start). 
 
-It helped me to think of the serialization step and the de-serialization steps together to come up with this, it may be useful for you two. For the first, we need a function that takes in the contents of the source file and the prefix code table, while we need a function that takes the encoded bytes and a tree; we can define them as:
+It helped me to think of the serialization step and the de-serialization steps together to come up with this, it may be useful for you too. For the first, we need a function that takes in the contents of the source file and the prefix code table, while we need a function that takes the encoded bytes and a tree; we can define them as:
 
 ```python
 def create_payload(source: str, table: dict[str, str]) -> bytes:
