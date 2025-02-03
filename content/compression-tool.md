@@ -1,6 +1,6 @@
 +++
 title = "Coding Challenges Solutions: Compression Tool"
-date = 2024-12-28
+date = 2025-02-02
 
 [taxonomies]
 categories = ["Guides"]
@@ -15,7 +15,7 @@ For this post, I will skip a lot of boilerplate and focus on some critical aspec
 * [Word Count](https://srcolinas.github.io/word-count/)
 * [JSON Parser](https://srcolinas.github.io/json-parser/)
 
-When I tried to follow the steps suggested I ended up with a few erros when I tried to use my tool on the suggested file I debugged them and discovered the edge cases I needed to pay attention to, but I ended up with the feeling that a lot of that debugging would have been obvious if I had solve the tasks in different order. Therefore, I will not be walking you trhough the steps in the guide, but through critical milestones.
+When I tried to follow the steps suggested I ended up with a few erros when I tried to use my tool on the suggested file I debugged them and discovered the edge cases I needed to pay attention to, but I ended up with the feeling that a lot of that debugging would have been obvious if I had solve the tasks in different order. Therefore, I won't be walking you through the steps in the guide, but through critical milestones.
 
 <!-- more -->
 
