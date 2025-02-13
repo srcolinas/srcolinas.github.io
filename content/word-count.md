@@ -131,7 +131,7 @@ If you are unfamiliar with the above, please go through [`pytest` documentation]
 
 We are not done though. Now I will tell you two more things that I still don't like about this setup for tests:
 1. Writing and reading some files is quite an expensive operation, at least compared to processing data in memory; therefore, running our tests this way can be slow (sure, a few short files may not make a difference and you could run tests in parallel, but there is a simpler and cheaper way).
-2. We are actually doing two things inside `process_file`: computing the number of lines and then formating the result (for simple applicationgs it may not be too bad, but we are hoping to build a more scalable habit). 
+2. We are actually doing two things inside `process_file`: computing the number of lines and then formating the result (for simple applications it may not be too bad, but we are hoping to build a more scalable habit). 
 
 Here is another version of `pyccwc/main.py`:
 
