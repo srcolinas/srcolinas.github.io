@@ -78,8 +78,9 @@ Clearly, it only supports one character, so let's add support for at least two e
 ```python
 def test_build_from_two_elements_has_children():
     tree = HuffmanTree.from_frequenceies({"a": 3, "b": 4})
-    assert isinstance(tree.left, HuffmanTree)
-    assert isinstance(tree.right, HuffmanTree)
+    left, right = tree.children
+    assert isinstance(left, HuffmanTree)
+    assert isinstance(right, HuffmanTree)
 
 
 def test_build_from_two_elements_has_right_weight():
