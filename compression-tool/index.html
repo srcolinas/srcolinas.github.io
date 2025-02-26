@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title></title>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="https://srcolinas.github.io/css/bootstrap.min.css">
+  <!-- Custom fonts for this template -->
+  <link href=" https://srcolinas.github.io/css/all.min.css" rel=" stylesheet" type="text/css">
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet'
+    type='text/css'>
+  <link
+    href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800'
+    rel='stylesheet' type='text/css'>
+
+  <!-- Custom styles for this template -->
+  <link rel="stylesheet" href="https://srcolinas.github.io/clean-blog.css">
+
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand" href="https:&#x2F;&#x2F;srcolinas.github.io"></a>
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
+        data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false"
+        aria-label="Toggle navigation">
+        Menu
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+          
+          <li class="nav-item">
+            <a class="nav-link"
+              href="https:&#x2F;&#x2F;srcolinas.github.io">Home</a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link"
+              href="https:&#x2F;&#x2F;srcolinas.github.io&#x2F;about">About</a>
+          </li>
+          
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  
+<!-- Page Header -->
+<header class="masthead" style="background-image: url('https://srcolinas.github.io/img/post-bg-2.png')">
+  <div class="overlay"></div>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <div class="post-heading">
+          
+<h1>Coding Challenges Solutions: Compression Tool</h1>
+<span class="meta">Posted by
+    <a href="#">Sebastian</a>
+    on  2 February 2025
+</span>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+  
+<!-- Post Content -->
+<article>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <p>Here I show how I solved the third of the codding challenges from <a href="https://codingchallenges.fyi">Coding Challenges</a>, which is about building a JSON parser from scratch using Test Driven Development. Please read the challenge description to learn more about what we will be solving here: <a href="https://codingchallenges.fyi/challenges/challenge-huffman">Huffman challenge</a>.</p>
+<p>If you just want to see the end code, you can jump to the final section of the post, but I encourage you to follow along to maximize learning. The goal is to show the process of development using Test Driven Development. </p>
+<p>For this post, I will skip a lot of boilerplate and focus on some critical aspects of this challenge, so make sure you review my previous two posts if you feel lost on some tooling:</p>
+<ul>
+<li><a href="https://srcolinas.github.io/word-count/">Word Count</a></li>
+<li><a href="https://srcolinas.github.io/json-parser/">JSON Parser</a></li>
+</ul>
+<p>When I tried to follow the steps suggested I ended up with a few erros when I tried to use my tool on the suggested file I debugged them and discovered the edge cases I needed to pay attention to, but I ended up with the feeling that a lot of that debugging would have been obvious if I had solve the tasks in different order. Therefore, I won't be walking you through the steps in the guide, but through critical milestones.</p>
+<span id="continue-reading"></span><h2 id="building-a-binary-tree">Building a binary tree</h2>
+<p>We need to <a href="https://opendsa-server.cs.vt.edu/ODSA/Books/CS3/html/Huffman.html#building-huffman-coding-trees">Huffman Tree</a> from character frequencies (i.e. how many times a character is repeated). We should be able to keep track of the weight of the tree and traverse it, so we should have a class similar to:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">import </span><span>dataclasses
+</span><span style="color:#9b9b9b;">from </span><span>typing </span><span style="color:#9b9b9b;">import </span><span>Hashable
+</span><span>
+</span><span>
+</span><span>@dataclasses.dataclass(kw_only=</span><span style="color:#569cd6;">True</span><span>)
+</span><span style="color:#569cd6;">class </span><span>HuffmanTree:
+</span><span>    weight: int
+</span><span>    children: tuple[</span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>, </span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>] | </span><span style="color:#569cd6;">None </span><span>= </span><span style="color:#569cd6;">None
+</span><span>
+</span><span>    @classmethod
+</span><span>    </span><span style="color:#569cd6;">def </span><span>from_frequenceies(
+</span><span>        cls, frequencies: dict[Hashable, int]
+</span><span>    ) -&gt; </span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>:
+</span><span>        </span><span style="color:#569cd6;">raise </span><span>NotImplementedError
+</span></code></pre>
+<p>Let's go step by step into implementing this class. The first thing that comes to mind is that, if there is a single character that is repeated any number of times, then it should have the number of times it is repeated as weight and <code>children</code> should be <code>None</code>; in other words, it should satisfy the following tests:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">from </span><span>src.huffman_tree </span><span style="color:#9b9b9b;">import </span><span>HuffmanTree
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_build_with_single_element_has_no_children():
+</span><span>    tree = HuffmanTree.from_frequenceies({</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#b5cea8;">3</span><span>})
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>tree.children </span><span style="color:#569cd6;">is None
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_build_with_single_element_has_right_weight():
+</span><span>    tree = HuffmanTree.from_frequenceies({</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#b5cea8;">3</span><span>})
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>tree.weight == </span><span style="color:#b5cea8;">3
+</span></code></pre>
+<p>One possible implementation is</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span>[</span><span style="color:#569cd6;">...</span><span>]
+</span><span>@dataclasses.dataclass(kw_only=</span><span style="color:#569cd6;">True</span><span>)
+</span><span style="color:#569cd6;">class </span><span>HuffmanTree:
+</span><span>    weight: int
+</span><span>    children: tuple[</span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>, </span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>] | </span><span style="color:#569cd6;">None </span><span>= </span><span style="color:#569cd6;">None
+</span><span>
+</span><span>    @classmethod
+</span><span>    </span><span style="color:#569cd6;">def </span><span>from_frequenceies(
+</span><span>        cls, frequencies: dict[Hashable, int]
+</span><span>    ) -&gt; </span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>:
+</span><span>        _, value = frequencies.popitem()
+</span><span>        </span><span style="color:#569cd6;">return </span><span>cls(weight=value)
+</span></code></pre>
+<p>Clearly, it only supports one character, so let's add support for at least two elements; in other words, let's add support for the following test cases:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>test_build_from_two_elements_has_children():
+</span><span>    tree = HuffmanTree.from_frequenceies({</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#b5cea8;">3</span><span>, </span><span style="color:#d69d85;">&quot;b&quot;</span><span>: </span><span style="color:#b5cea8;">4</span><span>})
+</span><span>    left, right = tree.children
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>isinstance(left, HuffmanTree)
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>isinstance(right, HuffmanTree)
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_build_from_two_elements_has_right_weight():
+</span><span>    tree = HuffmanTree.from_frequenceies({</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#b5cea8;">3</span><span>, </span><span style="color:#d69d85;">&quot;b&quot;</span><span>: </span><span style="color:#b5cea8;">4</span><span>})
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>tree.weight == </span><span style="color:#b5cea8;">7
+</span></code></pre>
+<p>If you run the tests now, they should fail. We will solve this by first building a list of simple trees (i.e. trees that don't have children) and then merging them together, so we change the implementation of <code>HuffmanTree.from_frequencies</code> to:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span>[</span><span style="color:#569cd6;">...</span><span>]
+</span><span style="color:#569cd6;">class </span><span>HuffmanTree:
+</span><span>    [</span><span style="color:#569cd6;">...</span><span>]
+</span><span>
+</span><span>    @classmethod
+</span><span>    </span><span style="color:#569cd6;">def </span><span>from_frequenceies(
+</span><span>        cls, frequencies: dict[Hashable, int]
+</span><span>    ) -&gt; </span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>:
+</span><span>        trees : list[HuffmanTree] = []
+</span><span>        </span><span style="color:#569cd6;">for </span><span>v </span><span style="color:#569cd6;">in </span><span>frequencies.values():
+</span><span>            trees.append(cls(weight=v))
+</span><span>
+</span><span>        </span><span style="color:#569cd6;">while </span><span>len(trees) &gt; </span><span style="color:#b5cea8;">1</span><span>:
+</span><span>            left = trees.pop()
+</span><span>            right = trees.pop()
+</span><span>            new = cls(weight=left.weight + right.weight, children=(left, right))
+</span><span>            trees.append(new)
+</span><span>        </span><span style="color:#569cd6;">return </span><span>trees.pop()
+</span></code></pre>
+<p>Now, if we have three or more elements, the implementation becomes more interesting: we should make sure that the children were added in the correct order and all nodes have the right weight:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>test_build_from_three_elements():
+</span><span>    tree = HuffmanTree.from_frequenceies({</span><span style="color:#d69d85;">&quot;z&quot;</span><span>: </span><span style="color:#b5cea8;">2</span><span>, </span><span style="color:#d69d85;">&quot;k&quot;</span><span>: </span><span style="color:#b5cea8;">7</span><span>, </span><span style="color:#d69d85;">&quot;m&quot;</span><span>: </span><span style="color:#b5cea8;">24</span><span>})
+</span><span>    subtree, first = cast(tuple[HuffmanTree, HuffmanTree], tree.children)
+</span><span>    second, thrid = cast(tuple[HuffmanTree, HuffmanTree], subtree.children)
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>tree.weight == </span><span style="color:#b5cea8;">33
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>tree.key </span><span style="color:#569cd6;">is None
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>subtree.key </span><span style="color:#569cd6;">is None
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>subtree.weight == </span><span style="color:#b5cea8;">9
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>subtree.children </span><span style="color:#569cd6;">is not None
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>first.key == </span><span style="color:#d69d85;">&quot;m&quot;
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>first.children </span><span style="color:#569cd6;">is None
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>first.weight == </span><span style="color:#b5cea8;">24
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>second.key == </span><span style="color:#d69d85;">&quot;z&quot;
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>second.children </span><span style="color:#569cd6;">is None
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>second.weight == </span><span style="color:#b5cea8;">2
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>thrid.key == </span><span style="color:#d69d85;">&quot;k&quot;
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>thrid.children </span><span style="color:#569cd6;">is None
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>thrid.weight == </span><span style="color:#b5cea8;">7
+</span><span>
+</span></code></pre>
+<p>Here is my implementation that works with all tests so far:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#9b9b9b;">import </span><span>dataclasses
+</span><span style="color:#9b9b9b;">import </span><span>heapq
+</span><span style="color:#9b9b9b;">from </span><span>collections.abc </span><span style="color:#9b9b9b;">import </span><span>Hashable
+</span><span>
+</span><span>
+</span><span>@dataclasses.dataclass(kw_only=</span><span style="color:#569cd6;">True</span><span>)
+</span><span style="color:#569cd6;">class </span><span>HuffmanTree:
+</span><span>    weight: int
+</span><span>    key: Hashable = </span><span style="color:#569cd6;">None
+</span><span>    children: tuple[</span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>, </span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>] | </span><span style="color:#569cd6;">None </span><span>= </span><span style="color:#569cd6;">None
+</span><span>
+</span><span>    </span><span style="color:#569cd6;">def </span><span>__lt__(self, other: </span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>) -&gt; bool:
+</span><span>        </span><span style="color:#569cd6;">return </span><span>self.weight &lt; other.weight
+</span><span>
+</span><span>    @classmethod
+</span><span>    </span><span style="color:#569cd6;">def </span><span>from_frequenceies(
+</span><span>        cls, frequencies: dict[Hashable, int]
+</span><span>    ) -&gt; </span><span style="color:#d69d85;">&quot;HuffmanTree&quot;</span><span>:
+</span><span>        trees: list[HuffmanTree] = []
+</span><span>        </span><span style="color:#569cd6;">for </span><span>k, v </span><span style="color:#569cd6;">in </span><span>frequencies.items():
+</span><span>            heapq.heappush(trees, cls(weight=v, key=k))
+</span><span>
+</span><span>        </span><span style="color:#569cd6;">while </span><span>len(trees) &gt; </span><span style="color:#b5cea8;">1</span><span>:
+</span><span>            left = heapq.heappop(trees)
+</span><span>            right = heapq.heappop(trees)
+</span><span>            heapq.heappush(
+</span><span>                trees,
+</span><span>                cls(weight=left.weight + right.weight, children=(left, right)),
+</span><span>            )
+</span><span>        </span><span style="color:#569cd6;">return </span><span>trees.pop()
+</span></code></pre>
+<p>You may be wondering about the fact that we are not storing the characters anywhere in the tree, only the weights. It is because we don't need that for now, remember that we add bits of complexity only when it is needed.</p>
+<h2 id="generating-a-prefix-code-table">Generating a prefix-code table</h2>
+<p>Here we are expected to create a table to help us know how each character maps to a code derived from a Huffman tree.</p>
+<p>I added a <code>key</code> attribute to our <code>HuffmanTree</code> class, so that we can store the characters, but I won't show that step here, it is a relatively straight forward step from the implementation above. This should let us focus on the implementation that correctly goes through the tree and retrieves the code for each character, wich should have the following interface:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>create_prefix_code_table(tree: HuffmanTree) -&gt; dict[Hashable, str]:
+</span><span>    </span><span style="color:#569cd6;">raise </span><span>NotImplementedErrpr
+</span></code></pre>
+<p>I won't go step by step this time, maybe it is time for you to try to and create the simplest tests and implemenetations on your own. If you feel stuck, here is one possible test:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>test_handles_three_elements():
+</span><span>    tree = HuffmanTree(
+</span><span>        weight=</span><span style="color:#b5cea8;">33</span><span>,
+</span><span>        children=(
+</span><span>            HuffmanTree(
+</span><span>                weight=</span><span style="color:#b5cea8;">9</span><span>,
+</span><span>                children=(
+</span><span>                    HuffmanTree(weight=</span><span style="color:#b5cea8;">2</span><span>, key=</span><span style="color:#d69d85;">&quot;z&quot;</span><span>),
+</span><span>                    HuffmanTree(weight=</span><span style="color:#b5cea8;">7</span><span>, key=</span><span style="color:#d69d85;">&quot;k&quot;</span><span>),
+</span><span>                ),
+</span><span>            ),
+</span><span>            HuffmanTree(weight=</span><span style="color:#b5cea8;">24</span><span>, key=</span><span style="color:#d69d85;">&quot;m&quot;</span><span>),
+</span><span>        ),
+</span><span>    )
+</span><span>    table = create_prefix_code_table(tree)
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>table == {</span><span style="color:#d69d85;">&quot;z&quot;</span><span>: </span><span style="color:#d69d85;">&quot;00&quot;</span><span>, </span><span style="color:#d69d85;">&quot;k&quot;</span><span>: </span><span style="color:#d69d85;">&quot;01&quot;</span><span>, </span><span style="color:#d69d85;">&quot;m&quot;</span><span>: </span><span style="color:#d69d85;">&quot;1&quot;</span><span>}
+</span></code></pre>
+<p>In real life, we never know whether our tests are covering every single edge case out there, so whatever I write and whatever you write may have ways to break. Usually that is the way it works: whenever we (or a user :( ) discover new ways to break our system, we should update the test cases to reflect it and fix it.</p>
+<p>Since the implementation is not the goal of the post, I will omit it for now, but I will give you a hint: <a href="https://en.wikipedia.org/wiki/Depth-first_search">depth first search</a>.</p>
+<h2 id="serializing-and-de-serializing-the-payload">Serializing and de-serializing the payload</h2>
+<p>This is a very critical step, it is when we actually achieve compression of the file. The key is to treat &quot;1&quot;s and &quot;0&quot;s in our codes as bits, and then group them into blocks of 8 to write bytes. Since a single character takes at least a byte and lots of characters end up with codes that can be written in less than a byte, we endup with a file of smaller size.</p>
+<p>Here is a hypothetical example: suppose we have a text file whose only content is <code>&quot;abcd&quot;</code> and somehow our prefix-code table looks like <code>{&quot;a&quot;: &quot;00&quot;, &quot;b&quot;: &quot;01&quot;, &quot;c&quot;: &quot;10&quot;, &quot;11&quot;}</code>, then this means we would only need to store <code>\x1b</code> (the byte with the number <code>00011011</code> or <code>27</code>) in the file, instead of the bytes associated with each of the original characters (1 byte instead of 4).</p>
+<p>Sounds straight forward, but not all of the code string would fit nicely into a byte. For example, if we had a file with <code>&quot;ab&quot;</code> and prefix-code table <code>{&quot;a&quot;: &quot;00&quot;, &quot;b&quot;, &quot;01&quot;}</code>, the resulting bits (<code>&quot;0001&quot;</code>) are less than 8. We can pad it with zeros to make it a nice byte, but then you would have trouble figuring out whether some &quot;0&quot;s are meant to indicate a character in the huffman tree or not. </p>
+<p>Moreover, even if you don't have that issue at the begining of the file, you will certainly have it at the end of the file. You can't hope that the length of all codes together will be divisible by 8. </p>
+<p>There may be many ways to go around this issue, but what I figured is that I could always move the last group of bits to the beggining of the file (so all other groups will perfectly have size 8) and that I could add a <code>1</code> to the front of that group, which is meant to be ignored (so that we know when the relevant &quot;0&quot;s start). </p>
+<p>It helped me to think of the serialization step and the de-serialization steps together to come up with this, it may be useful for you too. For the first, we need a function that takes in the contents of the source file and the prefix code table, while we need a function that takes the encoded bytes and a tree; we can define them as:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>create_payload(source: str, table: dict[str, str]) -&gt; bytes:
+</span><span>    </span><span style="color:#569cd6;">...
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>restore_payload(payload: bytes, tree: huffman.HuffmanTree) -&gt; str:
+</span><span>    </span><span style="color:#569cd6;">...
+</span></code></pre>
+<p>The second one could alternatively take the frequencies and then we use <code>huffman.HuffmanTree.from_frequencies</code> to build the tree, but I find it easier to think about the tests and edge cases this way.</p>
+<p>Here are the tests I needed to make this work nicely for the book used in the coding challenges guide:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#569cd6;">def </span><span>test_first_byte_starts_with_extra_on_bit():
+</span><span>    result = serialize.create_payload(</span><span style="color:#d69d85;">&quot;a&quot;</span><span>, {</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#d69d85;">&quot;1&quot; </span><span>* </span><span style="color:#b5cea8;">7</span><span>})
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result == </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">\xff</span><span style="color:#d69d85;">&quot;
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_last_byte_appears_first():
+</span><span>    result = serialize.create_payload(</span><span style="color:#d69d85;">&quot;ab&quot;</span><span>, {</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#d69d85;">&quot;0&quot; </span><span>* </span><span style="color:#b5cea8;">8</span><span>, </span><span style="color:#d69d85;">&quot;b&quot;</span><span>: </span><span style="color:#d69d85;">&quot;1&quot; </span><span>* </span><span style="color:#b5cea8;">7</span><span>})
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result == </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">\xff\x00</span><span style="color:#d69d85;">&quot;
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_small_payload_codes_are_grouped_in_bytes():
+</span><span>    result = serialize.create_payload(</span><span style="color:#d69d85;">&quot;abc&quot;</span><span>, {</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#d69d85;">&quot;1&quot;</span><span>, </span><span style="color:#d69d85;">&quot;b&quot;</span><span>: </span><span style="color:#d69d85;">&quot;111&quot;</span><span>, </span><span style="color:#d69d85;">&quot;c&quot;</span><span>: </span><span style="color:#d69d85;">&quot;111&quot;</span><span>})
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result == </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">\xff</span><span style="color:#d69d85;">&quot;
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_big_payload_codes_are_grouped_in_bytes():
+</span><span>    result = serialize.create_payload(</span><span style="color:#d69d85;">&quot;a&quot;</span><span>, {</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#d69d85;">&quot;0&quot; </span><span>* </span><span style="color:#b5cea8;">8 </span><span>+ </span><span style="color:#d69d85;">&quot;1&quot; </span><span>* </span><span style="color:#b5cea8;">7</span><span>})
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result == </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">\xff\x00</span><span style="color:#d69d85;">&quot;
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_restore_payload_ignores_leading_bit_and_turns_left():
+</span><span>    result = serialize.restore_payload(
+</span><span>        int(</span><span style="color:#d69d85;">&quot;10&quot;</span><span>, </span><span style="color:#b5cea8;">2</span><span>).to_bytes(</span><span style="color:#b5cea8;">1</span><span>),
+</span><span>        HuffmanTree(
+</span><span>            weight=-</span><span style="color:#b5cea8;">1</span><span>,
+</span><span>            children=(
+</span><span>                HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;a&quot;</span><span>),
+</span><span>                HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;b&quot;</span><span>),
+</span><span>            ),
+</span><span>        ),
+</span><span>    )
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result == </span><span style="color:#d69d85;">&quot;a&quot;
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_restore_payload_ignores_leading_bit_and_turns_right():
+</span><span>    result = serialize.restore_payload(
+</span><span>        int(</span><span style="color:#d69d85;">&quot;11&quot;</span><span>, </span><span style="color:#b5cea8;">2</span><span>).to_bytes(</span><span style="color:#b5cea8;">1</span><span>),
+</span><span>        HuffmanTree(
+</span><span>            weight=-</span><span style="color:#b5cea8;">1</span><span>,
+</span><span>            children=(
+</span><span>                HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;a&quot;</span><span>),
+</span><span>                HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;b&quot;</span><span>),
+</span><span>            ),
+</span><span>        ),
+</span><span>    )
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result == </span><span style="color:#d69d85;">&quot;b&quot;
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_restore_payload_with_left_loaded_tree():
+</span><span>    result = serialize.restore_payload(
+</span><span>        </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;#&quot;</span><span>,
+</span><span>        HuffmanTree(
+</span><span>            weight=-</span><span style="color:#b5cea8;">1</span><span>,
+</span><span>            children=(
+</span><span>                HuffmanTree(
+</span><span>                    weight=-</span><span style="color:#b5cea8;">1</span><span>,
+</span><span>                    children=(
+</span><span>                        HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;a&quot;</span><span>),
+</span><span>                        HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;b&quot;</span><span>),
+</span><span>                    ),
+</span><span>                ),
+</span><span>                HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;c&quot;</span><span>),
+</span><span>            ),
+</span><span>        ),
+</span><span>    )
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result == </span><span style="color:#d69d85;">&quot;abc&quot;
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_restore_payload_with_right_loaded_tree():
+</span><span>    result = serialize.restore_payload(
+</span><span>        </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;6&quot;</span><span>,
+</span><span>        HuffmanTree(
+</span><span>            weight=-</span><span style="color:#b5cea8;">1</span><span>,
+</span><span>            children=(
+</span><span>                HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;s&quot;</span><span>),
+</span><span>                HuffmanTree(
+</span><span>                    weight=-</span><span style="color:#b5cea8;">1</span><span>,
+</span><span>                    children=(
+</span><span>                        HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;L&quot;</span><span>),
+</span><span>                        HuffmanTree(weight=-</span><span style="color:#b5cea8;">1</span><span>, key=</span><span style="color:#d69d85;">&quot;e&quot;</span><span>),
+</span><span>                    ),
+</span><span>                ),
+</span><span>            ),
+</span><span>        ),
+</span><span>    )
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result == </span><span style="color:#d69d85;">&quot;Les&quot;
+</span><span>
+</span></code></pre>
+<p>Again, try to make those test pass one at the time. </p>
+<h2 id="writing-a-header">Writing a header</h2>
+<p>If you are not very much familiar with what programmers put into files and how, you may not have any idea of what a header is. Basically, you can define a file format in any way you like, you define how it looks like internally and its extension (if any). The famous formats out there just happen to solve a common problem so nicely that people use them and they became standard. In this case, we will create one format that works for our purpose and that we don't really expect anyone else to use it, after all, this is an academic excercise, the world of compression is much more complex nowadays.</p>
+<p>What is most important for our file format is that it contains the necessary information to decode a compressed file. The haeder is the piece of the file that will allow us to map original characters to associated codes from the Huffman tree. Since we already have an implementation that buils a tree out of frequencies, let's serialize those frequencies as the header. We will do it as follows:</p>
+<ol>
+<li>Each character shuold be a utf-8 encoded version of the original character, because we need the contents of the file to be written in bytes, as we did in the previous step.</li>
+<li>Its count will be an integer expressed as bytes, as storing the integer literals will take up more space (one byte per digit, while a single byte can hold more values).</li>
+<li>Each character-count pair is going to be separated by a comma.</li>
+<li>Once we finish writing the table, we should write <code>\n**\n</code> to mark the section of the file where the compressed contents are meant to be written. </li>
+</ol>
+<p>Now, if we had frequencies like <code>{&quot;a&quot;: 12, &quot;b&quot;: 256, &quot;á&quot;: 1}</code>, we would end up with a file looking like:</p>
+<pre style="background-color:#1e1e1e;color:#dcdcdc;"><code><span>&quot;a-\x0c,b-\x01\x00,\xc3\xa1-\x01&quot;
+</span><span>**
+</span><span>[...]
+</span></code></pre>
+<p>where <code>[...]</code> represents the contents of the file, but we will see how to do that in a later step. </p>
+<p>How to test for that? Here is one idea:</p>
+<pre data-lang="python" style="background-color:#1e1e1e;color:#dcdcdc;" class="language-python "><code class="language-python" data-lang="python"><span>@pytest.mark.parametrize(
+</span><span>    </span><span style="color:#d69d85;">&quot;frequencies,header&quot;</span><span>,
+</span><span>    [
+</span><span>        ({</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#b5cea8;">12</span><span>}, </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;a-</span><span style="color:#e3bbab;">\x0c</span><span style="color:#d69d85;">&quot;</span><span>),
+</span><span>        ({</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#b5cea8;">256</span><span>}, </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;a-</span><span style="color:#e3bbab;">\x01\x00</span><span style="color:#d69d85;">&quot;</span><span>),
+</span><span>        ({</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#b5cea8;">12</span><span>, </span><span style="color:#d69d85;">&quot;b&quot;</span><span>: </span><span style="color:#b5cea8;">256</span><span>}, </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;a-</span><span style="color:#e3bbab;">\x0c</span><span style="color:#d69d85;">,b-</span><span style="color:#e3bbab;">\x01\x00</span><span style="color:#d69d85;">&quot;</span><span>),
+</span><span>        ({</span><span style="color:#d69d85;">&quot;á&quot;</span><span>: </span><span style="color:#b5cea8;">1</span><span>}, </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">\xc3\xa1</span><span style="color:#d69d85;">-</span><span style="color:#e3bbab;">\x01</span><span style="color:#d69d85;">&quot;</span><span>),
+</span><span>    ],
+</span><span>)
+</span><span style="color:#569cd6;">def </span><span>test_header_values(frequencies: dict[str, int], header: bytes):
+</span><span>    result = serialize.create_header(frequencies)
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result.startswith(header)
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>result.endswith(</span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">\n</span><span style="color:#d69d85;">**</span><span style="color:#e3bbab;">\n</span><span style="color:#d69d85;">&quot;</span><span>)
+</span><span>
+</span><span>
+</span><span style="color:#569cd6;">def </span><span>test_header_doesnot_write_content():
+</span><span>    header = serialize.create_header({</span><span style="color:#d69d85;">&quot;a&quot;</span><span>: </span><span style="color:#b5cea8;">0</span><span>})
+</span><span>    _, content = header.split(</span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;</span><span style="color:#e3bbab;">\n</span><span style="color:#d69d85;">**</span><span style="color:#e3bbab;">\n</span><span style="color:#d69d85;">&quot;</span><span>)
+</span><span>    </span><span style="color:#569cd6;">assert </span><span>content == </span><span style="color:#569cd6;">b</span><span style="color:#d69d85;">&quot;&quot;
+</span><span>
+</span></code></pre>
+<p>Go ahead and try to implement it yourself, try to solve one test case at the time! At this step we are also required to improve the tests of our <code>main</code> function to check that a file can be written with that header. I will ommit that part from this post.</p>
+<h2 id="food-for-thought">Food for Thought</h2>
+<p>You can check my full implementation at <a href="https://github.com/srcolinas/codingchallenges_solutions/tree/main/compression-tool">https://github.com/srcolinas/codingchallenges_solutions/tree/main/compression-tool</a></p>
+<p>Here are some things to think about:</p>
+<ul>
+<li>Remember that the output file will also contain a hedear with the frequencies for each character, so the final amount of bytes is the bytes in the payload + the bytes in the header. If we have a large document, we will still achieve some compression, so that is fine.</li>
+<li>I originally thought I didn't need to write the frequencies to the output file and then build the tree from that. I thought I could just write the prefix-code table and I would be able to restore a file. Think about why it wouldn't work.</li>
+<li>The test cases sometimes use objects that would never appear in real life, like a tree with a particular structure or weights; however, it is fine to use that for testing, since they are compact ways to highlight particular cases that we need to support in our implementation. </li>
+<li>It is nice to see a real application of data structures and algorithmos out there. I know there are many, but the world of high level languages an libraries makes us not to think about that too often. </li>
+</ul>
+<hr />
+<p><a href="https://github.com/srcolinas/srcolinas.github.io/tree/master/content/compression-tool.md">Suggest Edits</a></p>
+
+        
+        <div class="post-tags">
+          <p>Tags:
+            
+            <a href="https://srcolinas.github.io/tags/coding-challenges/">#Coding Challenges</a>
+            
+            <a href="https://srcolinas.github.io/tags/tdd/">#TDD</a>
+            
+          </p>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</article>
+
+
+  <hr>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <ul class="list-inline text-center">
+            
+            <li class="list-inline-item">
+              <a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;srcolinas&#x2F;">
+                <span class="fa-stack fa-lg">
+                  <i class="fas fa-circle fa-stack-2x"></i>
+                  <i class="fab fa-linkedin fa-stack-1x fa-inverse"></i>
+                </span>
+              </a>
+            </li>
+            
+            <li class="list-inline-item">
+              <a href="https:&#x2F;&#x2F;srcolinas.github.io&#x2F;rss.xml">
+                <span class="fa-stack fa-lg">
+                  <i class="fas fa-circle fa-stack-2x"></i>
+                  <i class="fas fa-rss fa-stack-1x fa-inverse"></i>
+                </span>
+              </a>
+            </li>
+            
+          </ul>
+          <p class="copyright text-muted">
+Copyright; Srcolinas
+<img src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.eu.svg" alt="Creative Commons License">
+</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="https://srcolinas.github.io/js/jquery.min.js"></script>
+  <script src="https://srcolinas.github.io/js/bootstrap.bundle.min.js"></script>
+
+  <!--Custom scripts for this template-->
+  <script src="https://srcolinas.github.io/js/clean-blog.min.js"></script>
+
+  <!--- Additional scripts -->
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    });
+</script>
+
+</body>
+
+</html>
