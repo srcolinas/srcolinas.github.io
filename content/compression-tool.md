@@ -15,7 +15,7 @@ For this post, I will skip a lot of boilerplate and focus on some critical aspec
 * [Word Count](https://srcolinas.github.io/word-count/)
 * [JSON Parser](https://srcolinas.github.io/json-parser/)
 
-When I tried to follow the steps suggested I ended up with a few erros when I tried to use my tool on the suggested file I debugged them and discovered the edge cases I needed to pay attention to, but I ended up with the feeling that a lot of that debugging would have been obvious if I had solve the tasks in different order. Therefore, I won't be walking you through the steps in the guide, but through critical milestones.
+When I tried to follow the steps suggested I ended up with a few errors when I tried to use my tool on the suggested file I debugged them and discovered the edge cases I needed to pay attention to, but I ended up with the feeling that a lot of that debugging would have been obvious if I had solve the tasks in different order. Therefore, I won't be walking you through the steps in the guide, but through critical milestones.
 
 <!-- more -->
 
@@ -178,7 +178,7 @@ You may be wondering about the fact that we are not storing the characters anywh
 
 Here we are expected to create a table to help us know how each character maps to a code derived from a Huffman tree.
 
-I added a `key` attribute to our `HuffmanTree` class, so that we can store the characters, but I won't show that step here, it is a relatively straight forward step from the implementation above. This should let us focus on the implementation that correctly goes through the tree and retrieves the code for each character, wich should have the following interface:
+I added a `key` attribute to our `HuffmanTree` class, so that we can store the characters, but I won't show that step here, it is a relatively straight forward step from the implementation above. This should let us focus on the implementation that correctly goes through the tree and retrieves the code for each character, which should have the following interface:
 
 ```python
 def create_prefix_code_table(tree: HuffmanTree) -> dict[Hashable, str]:
@@ -214,13 +214,13 @@ Since the implementation is not the goal of the post, I will omit it for now, bu
 
 This is a very critical step, it is when we actually achieve compression of the file. The key is to treat "1"s and "0"s in our codes as bits, and then group them into blocks of 8 to write bytes. Since a single character takes at least a byte and lots of characters end up with codes that can be written in less than a byte, we endup with a file of smaller size.
 
-Here is a hypothetical example: suppose we have a text file whose only content is `"abcd"` and somehow our prefix-code table looks like `{"a": "00", "b": "01", "c": "10", "11"}`, then this means we would only need to store `\x1b` (the byte with the number `00011011` or `27`) in the file, instead of the bytes associated with each of the original characters (1 byte instead of 4).
+Here is a hypothetical example: suppose we have a text file whose only content is `"abcd"` and somehow our prefix-code table looks like `{"a": "00", "b": "01", "c": "10", "d": "11"}`, then this means we would only need to store `\x1b` (the byte with the number `00011011` or `27`) in the file, instead of the bytes associated with each of the original characters (1 byte instead of 4).
 
-Sounds straight forward, but not all of the code string would fit nicely into a byte. For example, if we had a file with `"ab"` and prefix-code table `{"a": "00", "b", "01"}`, the resulting bits (`"0001"`) are less than 8. We can pad it with zeros to make it a nice byte, but then you would have trouble figuring out whether some "0"s are meant to indicate a character in the huffman tree or not. 
+Sounds straight forward, but not all of the code string would fit nicely into a byte. For example, if we had a file with `"ab"` and prefix-code table `{"a": "00", "b": "01"}`, the resulting bits (`"0001"`) are less than 8. We can pad it with zeros to make it a nice byte, but then you would have trouble figuring out whether some "0"s are meant to indicate a character in the huffman tree or not. 
 
 Moreover, even if you don't have that issue at the begining of the file, you will certainly have it at the end of the file. You can't hope that the length of all codes together will be divisible by 8. 
 
-There may be many ways to go around this issue, but what I figured is that I could always move the last group of bits to the beggining of the file (so all other groups will perfectly have size 8) and that I could add a `1` to the front of that group, which is meant to be ignored (so that we know when the relevant "0"s start). 
+There may be many ways to go around this issue, but what I figured is that I could always move the last group of bits to the beggining of the file (so all other groups will perfectly have size 8) and that I could add a `1` to the front of that group, which is meant to be ignored (so that we know when the relevant "0"s start). For this prefix table `{"a": "00", "b": "11"}` it would encoded to (`00010011`). Note that the 0's are padded at the beginning with a `1` at the end, indicating that the following bits will be part of the sequence. 
 
 It helped me to think of the serialization step and the de-serialization steps together to come up with this, it may be useful for you too. For the first, we need a function that takes in the contents of the source file and the prefix code table, while we need a function that takes the encoded bytes and a tree; we can define them as:
 
@@ -333,7 +333,7 @@ Again, try to make those test pass one at the time.
 
 If you are not very much familiar with what programmers put into files and how, you may not have any idea of what a header is. Basically, you can define a file format in any way you like, you define how it looks like internally and its extension (if any). The famous formats out there just happen to solve a common problem so nicely that people use them and they became standard. In this case, we will create one format that works for our purpose and that we don't really expect anyone else to use it, after all, this is an academic excercise, the world of compression is much more complex nowadays.
 
-What is most important for our file format is that it contains the necessary information to decode a compressed file. The haeder is the piece of the file that will allow us to map original characters to associated codes from the Huffman tree. Since we already have an implementation that buils a tree out of frequencies, let's serialize those frequencies as the header. We will do it as follows:
+What is most important for our file format is that it contains the necessary information to decode a compressed file. The haeder is the piece of the file that will allow us to map original characters to associated codes from the Huffman tree. Since we already have an implementation that builds a tree out of frequencies, let's serialize those frequencies as the header. We will do it as follows:
 
 1. Each character shuold be a utf-8 encoded version of the original character, because we need the contents of the file to be written in bytes, as we did in the previous step.
 2. Its count will be an integer expressed as bytes, as storing the integer literals will take up more space (one byte per digit, while a single byte can hold more values).
@@ -383,7 +383,7 @@ You can check my full implementation at [https://github.com/srcolinas/codingchal
 
 Here are some things to think about:
 
-* Remember that the output file will also contain a hedear with the frequencies for each character, so the final amount of bytes is the bytes in the payload + the bytes in the header. If we have a large document, we will still achieve some compression, so that is fine.
+* Remember that the output file will also contain a header with the frequencies for each character, so the final amount of bytes is the bytes in the payload + the bytes in the header. If we have a large document, we will still achieve some compression, so that is fine.
 * I originally thought I didn't need to write the frequencies to the output file and then build the tree from that. I thought I could just write the prefix-code table and I would be able to restore a file. Think about why it wouldn't work.
 * The test cases sometimes use objects that would never appear in real life, like a tree with a particular structure or weights; however, it is fine to use that for testing, since they are compact ways to highlight particular cases that we need to support in our implementation. 
 * It is nice to see a real application of data structures and algorithmos out there. I know there are many, but the world of high level languages an libraries makes us not to think about that too often. 
